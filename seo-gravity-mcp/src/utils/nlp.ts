@@ -1,7 +1,46 @@
-import natural from 'natural';
 import { SpoTriple, EntitySalienceItem } from '../types/seo.js';
 
-const tokenizer = new natural.WordTokenizer();
+// Native lightweight word tokenizer
+function tokenize(text: string): string[] {
+  return text.match(/[a-zA-Z0-9'-]+/g) || [];
+}
+
+// Built-in TF-IDF implementation without heavy external dependencies
+class SimpleTfIdf {
+  private docs: string[][] = [];
+
+  addDocument(doc: string) {
+    const rawTokens = tokenize(doc.toLowerCase());
+    const tokens = rawTokens.filter(t => t.length >= 3 && !stopwords.has(t) && !/^\d+$/.test(t));
+    this.docs.push(tokens);
+  }
+
+  listTerms(docIndex: number): Array<{ term: string; tfidf: number }> {
+    if (docIndex < 0 || docIndex >= this.docs.length) return [];
+    const docTokens = this.docs[docIndex];
+    if (docTokens.length === 0) return [];
+
+    const totalDocs = this.docs.length;
+    const termCounts = new Map<string, number>();
+    for (const t of docTokens) {
+      termCounts.set(t, (termCounts.get(t) || 0) + 1);
+    }
+
+    const results: Array<{ term: string; tfidf: number }> = [];
+    for (const [term, count] of termCounts.entries()) {
+      const tf = count / docTokens.length;
+      let docFreq = 0;
+      for (const d of this.docs) {
+        if (d.includes(term)) docFreq++;
+      }
+      const idf = Math.log((1 + totalDocs) / (1 + docFreq)) + 1;
+      results.push({ term, tfidf: tf * idf * 10 });
+    }
+
+    return results.sort((a, b) => b.tfidf - a.tfidf);
+  }
+}
+
 const stopwords = new Set([
   'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'aren\'t', 'as', 'at',
   'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'can\'t', 'cannot',
@@ -24,7 +63,7 @@ const stopwords = new Set([
  */
 export function extractKeyphrases(text: string, maxItems = 30): Array<{ term: string; count: number; tf: number }> {
   const clean = text.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ');
-  const rawTokens = tokenizer.tokenize(clean) || [];
+  const rawTokens = tokenize(clean);
   const tokens = rawTokens.filter(t => t.length > 2 && !stopwords.has(t) && !/^\d+$/.test(t));
   const totalTokens = tokens.length || 1;
 
@@ -67,7 +106,7 @@ export function computeContentGapTfIdf(
   targetText: string,
   competitorTexts: string[]
 ): Array<{ term: string; competitorFrequency: number; targetFrequency: number; importance: 'high' | 'medium' | 'low' }> {
-  const tfidf = new natural.TfIdf();
+  const tfidf = new SimpleTfIdf();
   
   // Doc 0 is target text
   tfidf.addDocument(targetText);
@@ -92,7 +131,7 @@ export function computeContentGapTfIdf(
   }
 
   // Find target frequencies
-  const targetTokens = (tokenizer.tokenize(targetText.toLowerCase()) || []).filter(t => !stopwords.has(t));
+  const targetTokens = tokenize(targetText.toLowerCase()).filter(t => !stopwords.has(t));
   const targetTokenCounts = new Map<string, number>();
   for (const t of targetTokens) {
     targetTokenCounts.set(t, (targetTokenCounts.get(t) || 0) + 1);
@@ -128,7 +167,7 @@ export function computeContentGapTfIdf(
 export function calculateReadability(text: string) {
   const clean = text.replace(/\s+/g, ' ').trim();
   const sentences = clean.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const words = (tokenizer.tokenize(clean) || []).filter(w => /[a-zA-Z]/.test(w));
+  const words = tokenize(clean).filter(w => /[a-zA-Z]/.test(w));
   
   const numSentences = Math.max(sentences.length, 1);
   const numWords = Math.max(words.length, 1);
@@ -160,7 +199,7 @@ export function calculateReadability(text: string) {
   // Long sentences (> 25 words)
   const longSentences = sentences
     .map(s => s.trim())
-    .filter(s => (tokenizer.tokenize(s) || []).length > 25);
+    .filter(s => tokenize(s).length > 25);
 
   return {
     fleschReadingEase: Math.max(0, Math.min(100, fleschReadingEase)),
