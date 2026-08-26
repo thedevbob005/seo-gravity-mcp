@@ -28,7 +28,7 @@
     "technical-seo",
     "antigravity"
   ],
-  "author": "Antigravity Team",
+  "author": "thedevbob005",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
