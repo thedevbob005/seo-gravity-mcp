@@ -16,6 +16,12 @@ export function getRandomUserAgent(): string {
   return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
+export interface InternalLinkDetail {
+  href: string;
+  anchorText: string;
+  rel: string[];
+}
+
 export interface FetchedPageContent {
   url: string;
   statusCode: number;
@@ -35,6 +41,7 @@ export interface FetchedPageContent {
   links: {
     internal: string[];
     external: string[];
+    internalDetails: InternalLinkDetail[];
   };
   images: Array<{
     src: string;
@@ -43,31 +50,19 @@ export interface FetchedPageContent {
   schemas: any[];
 }
 
-/**
- * Robust fetcher that supports:
- * 1. Live Web URLs (https://example.com)
- * 2. Localhost Dev Servers (http://localhost:3000)
- * 3. Local Workspace File Paths (d:/aide/index.html, ./public/test.html)
- * 4. Raw HTML strings
- */
 export async function fetchAndParsePage(input: string, baseOrigin?: string): Promise<FetchedPageContent> {
   let html = '';
   let url = input;
   let statusCode = 200;
   let headers: Record<string, string> = {};
 
-  // Check if input is raw HTML
   if (input.trim().startsWith('<') && input.includes('>')) {
     html = input;
     url = baseOrigin || 'raw-html-input';
-  }
-  // Check if input is a local file path
-  else if (fs.existsSync(input) && fs.statSync(input).isFile()) {
+  } else if (fs.existsSync(input) && fs.statSync(input).isFile()) {
     html = fs.readFileSync(input, 'utf-8');
     url = `file://${path.resolve(input).replace(/\\/g, '/')}`;
-  }
-  // Otherwise treat as URL (local or remote)
-  else {
+  } else {
     try {
       const response = await axios.get(input, {
         headers: {
@@ -92,11 +87,9 @@ export async function fetchAndParsePage(input: string, baseOrigin?: string): Pro
 
   const $ = cheerio.load(html);
 
-  // Extract metadata
   const title = $('title').first().text().trim() || $('meta[property="og:title"]').attr('content')?.trim() || '';
   const metaDescription = $('meta[name="description"]').attr('content')?.trim() || $('meta[property="og:description"]').attr('content')?.trim() || '';
 
-  // Extract headings
   const headings = {
     h1: $('h1').map((_, el) => $(el).text().trim()).get().filter(Boolean),
     h2: $('h2').map((_, el) => $(el).text().trim()).get().filter(Boolean),
@@ -104,42 +97,45 @@ export async function fetchAndParsePage(input: string, baseOrigin?: string): Pro
     h4: $('h4').map((_, el) => $(el).text().trim()).get().filter(Boolean),
   };
 
-  // Clean body text
   const cloneBody = $('body').clone();
   cloneBody.find('script, style, noscript, nav, footer, iframe, svg').remove();
   const cleanText = cloneBody.text().replace(/\s+/g, ' ').trim();
   const words = cleanText.split(/\s+/).filter(w => w.length > 0);
   const wordCount = words.length;
 
-  // Extract links
-  const domain = url.startsWith('http') ? new URL(url).hostname : '';
+  const domain = url.startsWith('http') ? new URL(url).hostname.toLowerCase() : '';
   const internal: string[] = [];
   const external: string[] = [];
+  const internalDetails: InternalLinkDetail[] = [];
 
   $('a[href]').each((_, el) => {
     const href = $(el).attr('href')?.trim() || '';
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
 
+    const anchorText = $(el).text().replace(/\s+/g, ' ').trim();
+    const rel = ($(el).attr('rel') || '').split(/\s+/).map(v => v.trim()).filter(Boolean);
+
     try {
       if (href.startsWith('/')) {
         internal.push(href);
-      } else if (href.startsWith('http')) {
+        internalDetails.push({ href, anchorText, rel });
+      } else if (href.startsWith('http://') || href.startsWith('https://')) {
         const parsed = new URL(href);
-        if (domain && parsed.hostname === domain) {
+        if (domain && parsed.hostname.toLowerCase() === domain) {
           internal.push(parsed.pathname + parsed.search);
+          internalDetails.push({ href, anchorText, rel });
         } else {
           external.push(href);
         }
       } else if (!href.includes(':')) {
-        // Relative link (e.g. "about", "../docs")
         internal.push('/' + href.replace(/^\.?\//, ''));
+        internalDetails.push({ href, anchorText, rel });
       }
     } catch {
-      // Ignore malformed URLs
+      // Ignore malformed URLs.
     }
   });
 
-  // Extract images
   const images: Array<{ src: string; alt: string }> = [];
   $('img').each((_, el) => {
     const src = $(el).attr('src') || $(el).attr('data-src') || '';
@@ -147,16 +143,13 @@ export async function fetchAndParsePage(input: string, baseOrigin?: string): Pro
     images.push({ src, alt });
   });
 
-  // Extract JSON-LD schemas
   const schemas: any[] = [];
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const text = $(el).html();
-      if (text) {
-        schemas.push(JSON.parse(text));
-      }
+      if (text) schemas.push(JSON.parse(text));
     } catch {
-      // Ignore invalid JSON-LD parsing errors
+      // Preserve the page result; invalid JSON-LD is handled by schema analysis.
     }
   });
 
@@ -171,7 +164,7 @@ export async function fetchAndParsePage(input: string, baseOrigin?: string): Pro
     headings,
     cleanText,
     wordCount,
-    links: { internal, external },
+    links: { internal, external, internalDetails },
     images,
     schemas
   };
