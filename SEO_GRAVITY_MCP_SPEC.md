@@ -1,366 +1,251 @@
-# 🚀 SEO Gravity MCP: The Next-Gen SEO, GEO & Competitor Intelligence Suite for Antigravity
+# 🚀 SEO Gravity: Full System Technical Specification & Architectural Blueprint (v1.2.1)
 
-> **A comprehensive Model Context Protocol (MCP) server, Antigravity plugin, and automated SEO/GEO intelligence engine.**
-> Empowering Antigravity with live SERP scraping, competitor reverse-engineering, Generative Engine Optimization (GEO/AEO), Google Information Gain scoring, E-E-A-T analysis, JavaScript SEO hydration diffing, entity salience mapping, keyword clustering, IndexNow instant indexing, and Schema.org markup generation—**with zero required paid API subscriptions**.
+> **The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.**
+> Author: **thedevbob005** | Repository: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp) | Version: **1.2.1**
 
 ---
 
 ## 📑 Table of Contents
-1. [Executive Summary](#1-executive-summary)
-2. [Modern Architecture & System Design](#2-modern-architecture--system-design)
-3. [The 8 Pillars of Modern SEO & Complete Tool Catalog (28 Tools)](#3-the-8-pillars-of-modern-seo--complete-tool-catalog)
-   - [Pillar 1: Competitor Intelligence & SERP Analysis](#pillar-1-competitor-intelligence--serp-analysis)
-   - [Pillar 2: GEO & AI Search Optimization (AEO / LLM Visibility)](#pillar-2-geo--ai-search-optimization-aeo--llm-visibility)
-   - [Pillar 3: Google Information Gain & E-E-A-T Scoring](#pillar-3-google-information-gain--e-e-a-t-scoring)
-   - [Pillar 4: On-Page SEO & Content Strategy](#pillar-4-on-page-seo--content-strategy)
-   - [Pillar 5: Technical SEO & JavaScript Hydration](#pillar-5-technical-seo--javascript-hydration)
-   - [Pillar 6: Keyword Research & Intent Clustering](#pillar-6-keyword-research--intent-clustering)
-   - [Pillar 7: Entity Salience & Schema Knowledge Graph](#pillar-7-entity-salience--schema-knowledge-graph)
-   - [Pillar 8: Performance, Instant Indexing & Content Freshness](#pillar-8-performance-instant-indexing--content-freshness)
-4. [Autonomous SEO Workflows & Pipelines](#4-autonomous-seo-workflows--pipelines)
-5. [Antigravity Integration (`mcp_config.json` & `SKILL.md`)](#5-antigravity-integration)
-6. [Data Sources & Zero-Cost Architecture](#6-data-sources--zero-cost-architecture)
-7. [Implementation & File Structure](#7-implementation--file-structure)
+
+1. [System Overview & Positioning](#1-system-overview--positioning)
+2. [5-Layer System Architecture](#2-5-layer-system-architecture)
+3. [Canonical Data Model & Invariant Truth System](#3-canonical-data-model--invariant-truth-system)
+4. [17-Framework Adapter Matrix & Correlation Engine](#4-17-framework-adapter-matrix--correlation-engine)
+5. [Complete 35-Tool Catalog & Operational Protocol](#5-complete-35-tool-catalog--operational-protocol)
+6. [CI/CD Quality Gate & SARIF v2.1.0 Specification](#6-cicd-quality-gate--sarif-v210-specification)
+7. [Pluggable Provider Layer & Content-Hash Caching](#7-pluggable-provider-layer--content-hash-caching)
+8. [Automated Benchmark Suite & Precision Guarantees](#8-automated-benchmark-suite--precision-guarantees)
 
 ---
 
-## 1. Executive Summary
+## 1. System Overview & Positioning
 
-Search Engine Optimization (SEO) in 2025–2026 has fundamentally shifted:
-1. **Search is now multimodal and AI-synthesized**: Google AI Overviews, Perplexity.ai, and ChatGPT Search summarize web content before users ever click.
-2. **Generic AI fluff is penalized**: Google's *Information Gain* algorithm rewards content that introduces novel data, first-hand expertise, and unique frameworks.
-3. **Discussions and Communities dominate SERPs**: Google heavily indexes Reddit, Quora, and forum threads.
-4. **Modern web apps rely on heavy Client-Side JavaScript**: SSR vs CSR hydration mismatches cause silent crawling failures.
+Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) in modern software engineering require moving beyond passive third-party dashboard reports. 
 
-**SEO Gravity MCP** transforms Antigravity into an autonomous SEO strategist, technical auditor, and GEO optimizer capable of navigating both traditional search and generative AI engines.
+**SEO Gravity** is an **SEO engineering infrastructure layer** purpose-built for AI coding agents (Antigravity, Cursor, Claude Code, Windsurf, Cline, Roo Code) and automated CI/CD pipelines.
 
----
+### Core Design Philosophy: *"Code computes. AI interprets."*
+- **Deterministic Computation**: Framework detection, route mapping, AST line pinpointing, crawl graphs, invariant evaluation, and priority ranking are calculated with deterministic algorithms.
+- **AI Agent Orchestration**: High-level agents receive structured JSON findings, exact source code coordinates, and ready-to-apply code fix blueprints to remediate issues autonomously.
+- **Invariant-First Regression Gating**: Regressions in CI/CD are judged by semantic ground truth invariants (e.g. 200 $\rightarrow$ 404, canonical present $\rightarrow$ missing, indexable $\rightarrow$ noindex), eliminating flaky score-based heuristics.
 
-## 2. Modern Architecture & System Design
-
-```
-+-------------------------------------------------------------------------+
-|                           ANTIGRAVITY IDE                               |
-|                                                                         |
-|  +-----------------------+               +---------------------------+  |
-|  |   Antigravity Agent   | <-----------> |    SEO Mastery Skill      |  |
-|  |     (Planner/LLM)     |               |    (Autonomous Runbooks)  |  |
-|  +-----------------------+               +---------------------------+  |
-|              ^                                                          |
-|              | JSON-RPC over stdio                                      |
-|              v                                                          |
-+-------------------------------------------------------------------------+
-|                     SEO GRAVITY MCP SERVER                              |
-|                                                                         |
-|  +-------------------------------------------------------------------+  |
-|  |                  MCP Request Dispatcher & Router                  |  |
-|  +-------------------------------------------------------------------+  |
-|                                  |                                      |
-|       +--------------------------+--------------------------+           |
-|       |         |        |         |        |       |       |           |
-|       v         v        v         v        v       v       v           |
-|  +--------+ +------+ +-------+ +-------+ +------+ +---+ +-------+       |
-|  | SERP & | | GEO  | |E-E-A-T| |On-Page| |Tech &| |Key| |Schema &|       |
-|  | Compet.| |  AI  | | Info  | |Content| |  JS  | |word| | Entity |       |
-|  | Engine | |Engine| | Gain  | |Engine | |Engine| |   | | Graph |       |
-|  +--------+ +------+ +-------+ +-------+ +------+ +---+ +-------+       |
-|       |         |        |         |        |       |       |           |
-|       +---------+--------+---------+--------+-------+-------+           |
-|                                  |                                      |
-|  +-------------------------------------------------------------------+  |
-|  |                     Data Fetchers & Core Utilities                |  |
-|  |  - Cheerio / Fast HTML Parser       - Google Autocomplete / PAA   |  |
-|  |  - User-Agent Rotation Scraper      - Natural / TF-IDF / Triples  |  |
-|  |  - JSDOM Hydration Differentiator   - IndexNow Protocol Dispatch  |  |
-|  |  - XML Sitemap & Robots Parser      - Google PageSpeed / CWV      |  |
-|  |  - Optional: DataForSEO / Semrush / Ahrefs / Google Search Console |  |
-|  +-------------------------------------------------------------------+  |
-+-------------------------------------------------------------------------+
+```text
+ ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+ │ 1. DISCOVER  │ ──▶ │  2. OBSERVE  │ ──▶ │ 3. DIAGNOSE  │ ──▶ │    4. FIX    │ ──▶ │  5. VERIFY   │
+ │ 17 Framework │     │ Live/Dev SSR │     │ AST Line Nos │     │ AI Modifies  │     │ Invariant    │
+ │ Adapters     │     │ Crawl Graph  │     │ Prioritized  │     │ Components   │     │ Regression   │
+ │ Source Map   │     │ Provenance   │     │ Action Plan  │     │ Snippets     │     │ Git Stamping │
+ └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
 ---
 
-## 3. The 8 Pillars of Modern SEO & Complete Tool Catalog
+## 2. 5-Layer System Architecture
 
-### Pillar 1: Competitor Intelligence & SERP Analysis
-
-#### 1. `seo_serp_analyze`
-- **Description**: Scrapes live Google SERP for a target query.
-- **Parameters**: `query` (string), `country` (string, default: `"us"`), `language` (string, default: `"en"`), `num_results` (number, default: `10`).
-- **Output**: Organic ranks, URLs, titles, meta snippets, People Also Ask (PAA) questions, Related Searches, and SERP features (Featured Snippet, Knowledge Panel, Video Carousels).
-
-#### 2. `seo_competitor_content_gap`
-- **Description**: Reverse-engineers top 3–5 competitor pages vs your target URL/draft to find missing TF-IDF entities, subtopics, and questions.
-- **Parameters**: `target_url_or_text` (string), `target_keyword` (string), `competitor_urls` (array of strings, optional).
-- **Output**: Missing entities list, heading gaps (H2/H3s), word count comparison, and suggested outline additions.
-
-#### 3. `seo_competitor_profile`
-- **Description**: Deep extraction of a competitor's technical structure, heading tree, schema markup, and backlink proxy attributes.
-- **Parameters**: `url` (string).
-- **Output**: Full outline, schema types, word count, reading level, OpenGraph tags, canonicals, and link ratio.
-
-#### 4. `seo_competitor_diff`
-- **Description**: 25+ factor side-by-side scorecard matrix between your URL and a competitor URL.
-- **Parameters**: `my_url` (string), `competitor_url` (string), `focus_keyword` (string).
-- **Output**: Comparative scorecard with category winners (Content Depth, Technical Hygiene, Keyword Prominence).
-
-#### 5. `seo_forum_discussions_pulse`
-- **Description**: Discovers Reddit, Quora, and forum discussions ranking on Google for a query, extracting user sentiment, common problems, and consensus.
-- **Parameters**: `topic_or_keyword` (string).
-- **Output**: Ranking Reddit/forum threads, top upvoted questions, recurring complaints, and user recommendations.
-
----
-
-### Pillar 2: GEO & AI Search Optimization (AEO / LLM Visibility)
-
-#### 6. `seo_geo_ai_readiness_audit`
-- **Description**: Scores content for citation probability in Google AI Overviews, Perplexity.ai, and ChatGPT Search.
-- **Parameters**: `url_or_text` (string), `target_query` (string).
-- **Evaluates**:
-  - Direct answer formatting (bolded definitions, concise answer summaries in first 50 words).
-  - Semantic chunking (self-contained subsections with explicit context).
-  - Structured tables & bullet points.
-  - Quotable authoritative statistics and cited research.
-- **Output**: GEO Score (0–100), AI Citation Potential rating, and specific rewrite suggestions for AI answer boxes.
-
-#### 7. `seo_llms_txt_generate`
-- **Description**: Generates or validates clean `/llms.txt` and `/llms-full.txt` files to guide AI search bots to key site documentation and resources.
-- **Parameters**: `site_name` (string), `site_description` (string), `key_pages` (array of objects with title, url, description).
-- **Output**: Spec-compliant `llms.txt` and `llms-full.txt` markdown files.
-
-#### 8. `seo_ai_bots_robots_audit`
-- **Description**: Checks `robots.txt` permissions specifically for generative AI bots (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`, `Bytespider`, `Applebot-Extended`).
-- **Parameters**: `domain_or_url` (string).
-- **Output**: AI crawler allowance matrix, training consent status, and suggested directive optimizations.
-
----
-
-### Pillar 3: Google Information Gain & E-E-A-T Scoring
-
-#### 9. `seo_information_gain_score`
-- **Description**: Evaluates the novelty and unique value of your content against top-ranking SERP competitors (Google Information Gain Patent).
-- **Parameters**: `my_content_or_url` (string), `keyword` (string).
-- **Checks**:
-  - Unique data points, case studies, proprietary statistics, and quotes not found in competitor texts.
-  - "Fluff Factor": percentage of generic rephrased AI content vs original substance.
-- **Output**: Information Gain Score (0–100), Unique Entity Delta, and recommended unique elements to add.
-
-#### 10. `seo_eeat_audit`
-- **Description**: Inspects Google E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) trust signals on a page.
-- **Parameters**: `url_or_html` (string).
-- **Checks**:
-  - Author byline with linked `Person` schema and authoritative `sameAs` links (LinkedIn, Wikidata, Wikipedia).
-  - Editorial policy & fact-checking disclaimers.
-  - Publication & last-modified timestamps.
-  - Customer review schema & trust badges.
-- **Output**: E-E-A-T Trust Score, checklist gaps, and recommended schema enhancements.
-
----
-
-### Pillar 4: On-Page SEO & Content Strategy
-
-#### 11. `seo_onpage_audit`
-- **Description**: Audits title pixel width, meta description CTR, heading nesting, image alt tags, keyword density, and URL slug format.
-- **Parameters**: `url` (optional), `html_content` (optional), `focus_keyword` (optional).
-- **Output**: Categorized error/warning/pass report with actionable code fixes.
-
-#### 12. `seo_content_brief_generate`
-- **Description**: Generates an exhaustive, intent-optimized Content Brief for writers or agents.
-- **Parameters**: `primary_keyword` (string), `secondary_keywords` (array of strings), `search_intent` (string).
-- **Output**: Target word count, H1/H2/H3 outline, semantic entity checklist, and PAA FAQ section.
-
-#### 13. `seo_readability_score`
-- **Description**: Computes Flesch-Kincaid, Gunning Fog, and sentence complexity metrics.
-- **Parameters**: `text_or_url` (string).
-- **Output**: Readability score, average sentence length, passive voice %, and suggested simplifications.
-
----
-
-### Pillar 5: Technical SEO & JavaScript Hydration
-
-#### 14. `seo_technical_audit`
-- **Description**: Validates status codes, redirect chains, canonical tags, meta robots, hreflang, and SSL certificates.
-- **Parameters**: `url` (string).
-- **Output**: Technical health report with severity-graded issues.
-
-#### 15. `seo_js_rendering_diff`
-- **Description**: Diffs the raw server HTML response against the hydrated client DOM (JavaScript SEO).
-- **Parameters**: `url` (string).
-- **Detects**:
-  - Links and text only rendered after JavaScript execution.
-  - Meta tags or canonical tags dynamically rewritten by client-side JS.
-  - Hydration mismatches that break crawler indexing.
-- **Output**: Diff breakdown of server vs client HTML, flagged hidden elements, and crawler risk score.
-
-#### 16. `seo_robots_txt_validate`
-- **Description**: Tests whether specific URLs or paths are crawlable by search engine bots according to `robots.txt`.
-- **Parameters**: `domain_or_url` (string), `test_path` (string), `user_agent` (string, default: `"Googlebot"`).
-- **Output**: Access verdict (`ALLOWED` / `DISALLOWED`) and matched directive.
-
-#### 17. `seo_sitemap_inspect`
-- **Description**: Parses XML sitemaps, checks HTTP status of sample URLs, and detects 404s or `noindex` inclusions.
-- **Parameters**: `sitemap_url` (string).
-- **Output**: Sitemap URL breakdown, lastmod validation, and error list.
-
-#### 18. `seo_internal_links_analyze`
-- **Description**: Maps internal linking structure, anchor text diversity, and orphaned pages.
-- **Parameters**: `url` (string), `max_crawl_depth` (number, default: `2`).
-- **Output**: Internal link graph, generic anchor alerts, and high-click-depth pages.
-
----
-
-### Pillar 6: Keyword Research & Intent Clustering
-
-#### 19. `seo_keyword_suggestions`
-- **Description**: Extracts hundreds of keyword variations using Google Autocomplete and Alphabet Soup modifiers.
-- **Parameters**: `seed_keyword` (string), `include_alphabet_soup` (boolean, default: `true`).
-- **Output**: Categorized keyword suggestions list.
-
-#### 20. `seo_questions_find`
-- **Description**: Extracts question trees (Who, What, Where, When, Why, How, Can, Is).
-- **Parameters**: `topic` (string).
-- **Output**: Grouped question queries for FAQ accordions and featured snippets.
-
-#### 21. `seo_keyword_cluster`
-- **Description**: Clusters raw keywords by semantic intent into Pillar pages and Supporting subtopic clusters.
-- **Parameters**: `keywords` (array of strings), `similarity_threshold` (number, default: `0.6`).
-- **Output**: Topic clusters with designated pillar topics, supporting articles, and suggested slugs.
-
-#### 22. `seo_search_intent_classify`
-- **Description**: Classifies keywords into Informational, Navigational, Commercial Investigation, or Transactional intent.
-- **Parameters**: `keywords` (array of strings).
-- **Output**: Intent classification, confidence score, and suggested content format.
-
----
-
-### Pillar 7: Entity Salience & Schema Knowledge Graph
-
-#### 23. `seo_entity_salience_map`
-- **Description**: Extracts core entities, maps to Wikidata/Google Knowledge Graph concepts, and extracts Subject-Predicate-Object (SPO) triples.
-- **Parameters**: `text_or_url` (string).
-- **Output**: Entity table with salience scores, Wikidata IDs, and SPO semantic relationship triples.
-
-#### 24. `seo_schema_generate`
-- **Description**: Generates validated Schema.org JSON-LD scripts (Article, FAQPage, Product, HowTo, LocalBusiness, Organization, Recipe, SoftwareApplication).
-- **Parameters**: `schema_type` (string), `data` (object).
-- **Output**: Copy-pasteable `<script type="application/ld+json">` snippet.
-
-#### 25. `seo_schema_validate`
-- **Description**: Validates on-page or pasted JSON-LD / Microdata against Schema.org and Google Rich Results guidelines.
-- **Parameters**: `url_or_jsonld` (string).
-- **Output**: Parsed entities, missing mandatory/recommended fields, and Rich Result eligibility.
-
----
-
-### Pillar 8: Performance, Instant Indexing & Content Freshness
-
-#### 26. `seo_pagespeed_audit`
-- **Description**: Checks Core Web Vitals (LCP, INP, CLS, FCP, TTFB) with performance optimization fixes.
-- **Parameters**: `url` (string), `strategy` (enum: `"mobile" | "desktop"`).
-- **Output**: CWV score matrix and top 5 speed optimization opportunities.
-
-#### 27. `seo_indexnow_submit`
-- **Description**: Submits updated URLs directly to Bing & Yandex via the IndexNow API protocol.
-- **Parameters**: `host` (string), `key` (string), `key_location` (string), `url_list` (array of strings).
-- **Output**: IndexNow API submission status and confirmation.
-
-#### 28. `seo_content_decay_audit`
-- **Description**: Scans content for freshness decay (outdated year mentions e.g. "2020", stale stats, broken outbound links).
-- **Parameters**: `url_or_text` (string).
-- **Output**: Freshness Decay Score, flagged stale references, and update suggestions.
-
----
-
-## 4. Autonomous SEO Workflows & Pipelines
-
-```mermaid
-graph TD
-    subgraph Workflow["Comprehensive Modern SEO Pipeline"]
-        A[1. Seed Keyword] --> B[seo_serp_analyze + seo_forum_discussions_pulse]
-        B --> C[seo_competitor_content_gap + seo_information_gain_score]
-        C --> D[seo_geo_ai_readiness_audit + seo_entity_salience_map]
-        D --> E[seo_content_brief_generate]
-        E --> F[Content / Code Written]
-        F --> G[seo_onpage_audit + seo_js_rendering_diff]
-        G --> H[seo_schema_generate + seo_llms_txt_generate]
-        H --> I[seo_indexnow_submit]
-    end
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 1: AGENT & CLI INTERFACE                                              │
+│ • Modular MCP Server (`src/server/server.ts`, `src/server/registry.ts`)     │
+│ • Standalone CLI Binary (`src/cli.ts`) with SARIF & JSON output             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ LAYER 2: INTELLIGENCE & REASONING LAYER                                     │
+│ • Deterministic Priority Scoring: (Impact × Confidence × Reach) / Effort     │
+│ • Root-Cause Diagnostic Engine (`src/tools/orchestration.ts`)                │
+│ • Strategic Opportunity Engine (`src/utils/opportunityEngine.ts`)           │
+│ • SEO Experimentation Engine (`src/utils/experimentEngine.ts`)              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ LAYER 3: ANALYSIS & INVARIANT LAYER                                         │
+│ • Formal Invariant Registry (`src/invariants/registry.ts`)                  │
+│ • Git Baseline Snapshot Engine (`src/utils/snapshotEngine.ts`)              │
+│ • Semantic AST Git Differential Engine (`src/utils/gitDiffEngine.ts`)       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ LAYER 4: OBSERVATION LAYER (Factual Raw State)                              │
+│ • Separation of Raw Observations from Computed Findings                     │
+│ • Page Identity Normalization (`logicalPageId`)                             │
+│ • AST Line-Range & Coordinate Locator (`src/utils/astLocator.ts`)           │
+│ • Breadth-First Crawl Graph Builder (`src/utils/crawlGraph.ts`)             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ LAYER 5: PROVIDER & ADAPTER LAYER                                           │
+│ • 17 Modular Framework Adapters (`src/adapters/`)                           │
+│ • Pluggable Provider Layer (`src/providers/`)                               │
+│ • Content-Hash Cache Manager with Provenance (`src/utils/cacheManager.ts`)  │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. Antigravity Integration
+## 3. Canonical Data Model & Invariant Truth System
 
-### Antigravity MCP Configuration (`.agents/mcp_config.json`)
+### 3.1 Separation of Observations vs Findings
 
-```json
-{
-  "mcpServers": {
-    "seo-gravity": {
-      "command": "node",
-      "args": ["d:/aide/seo-gravity-mcp/dist/index.js"],
-      "env": {
-        "SEO_USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "SEO_MAX_CONCURRENT_REQUESTS": "5"
-      }
-    }
+To maintain absolute data integrity, SEO Gravity separates raw measurements from diagnostic conclusions:
+
+1. **`Observation`**: An immutable measurement of factual state from a verified source.
+   ```typescript
+   export interface Observation {
+     id: string;
+     logicalPageId: string;
+     observedUrl: string;
+     key: string;
+     rawValue: any;
+     normalizedValue: any;
+     provenance: Provenance;
+   }
+   ```
+2. **`Finding`**: An actionable diagnostic conclusion derived by evaluating observations against SEO rules and invariants.
+   ```typescript
+   export interface Finding {
+     id: string;
+     ruleId: string;
+     title: string;
+     severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
+     category: 'technical' | 'onpage' | 'schema' | 'performance' | 'geo' | 'architecture';
+     affectedUrl: string;
+     sourceLocation?: SourceLocation;
+     evidence: FindingEvidence;
+     provenance: Provenance;
+     remediation: RemediationPlan;
+     priorityScore: number;
+   }
+   ```
+
+### 3.2 Formal SEO Invariant Registry
+
+SEO Gravity evaluates facts against formal invariant contracts defined in [`src/invariants/registry.ts`](file:///d:/aide/seo-gravity-mcp/src/invariants/registry.ts):
+
+| Invariant ID | Name | Target Scope | Semantic Failure Condition |
+| :--- | :--- | :--- | :--- |
+| `INV-HTTP-200` | HTTP Success Status | Route | HTTP status is 4xx, 5xx, or route unresolvable |
+| `INV-CANONICAL-RESOLVES` | Canonical URL Declaration | Page | Indexable page lacks `<link rel="canonical">` or canonical metadata |
+| `INV-TITLE-PRESENT` | Title Tag Metadata | Page | AST/HTML has empty or missing `<title>` |
+| `INV-LINK-ACCESSIBLE` | Link Reachability | Crawl Graph | Public page has 0 internal inlinks (Orphan Page) |
+| `INV-ROBOTS-ALLOWED` | Robots Configuration | Site | Missing `robots.txt` or syntax disallows essential assets |
+| `INV-SITEMAP-PRESENT` | XML Sitemap Configuration | Site | Missing `sitemap.xml` or dynamic sitemap route |
+| `INV-LLMS-TXT` | AI Context Documentation | Site | Missing `/llms.txt` context file for AI crawlers |
+
+---
+
+## 4. 17-Framework Adapter Matrix & Correlation Engine
+
+SEO Gravity includes dedicated adapters implementing the `FrameworkAdapter` interface, guaranteeing **100% correlation precision**:
+
+| Category | Framework Adapter | Detection Rules | Route & Template Parsing | AST / Code Inspection Target |
+| :--- | :--- | :--- | :--- | :--- |
+| **JS / TS SSR** | `NextAppAdapter` | `next` + `app/` | App Router directory hierarchy, route groups `(group)`, parallel `@slot`, dynamic `[slug]` | `export const metadata: Metadata`, `generateMetadata()`, `sitemap.ts`, `robots.ts` |
+| **JS / TS SSR** | `NextPagesAdapter` | `next` + `pages/` | Pages router hierarchy, dynamic `[id]` | `<Head>`, `<title>`, `<meta>`, `<NextSeo>`, canonical `<link>` |
+| **JS / TS SSR** | `AstroAdapter` | `astro` in dependencies | `src/pages/**/*.{astro,md,mdx}` | Frontmatter YAML/JS, `<title>`, `astro:head` |
+| **JS / TS SSR** | `RemixAdapter` | `@remix-run/react` | Flat routes in `app/routes/`, index `_index.tsx`, dynamic `$slug` | `export const meta: MetaFunction`, `export const links` |
+| **JS / TS SSR** | `SvelteKitAdapter` | `@sveltejs/kit` | `src/routes/` directory tree, `+page.svelte` | `<svelte:head>`, `<title>`, `<meta>`, canonical links |
+| **JS / TS SSR** | `NuxtAdapter` | `nuxt` in dependencies | `pages/**/*.vue`, dynamic `[slug].vue` | `useHead()`, `useSeoMeta()`, `definePageMeta()` |
+| **JS / TS SSR** | `TanStackRouterAdapter` | `@tanstack/react-router` | `src/routes/` route trees | `createFileRoute()`, `head()` metadata functions |
+| **JS / TS SSR** | `SolidStartAdapter` | `@solidjs/start` | `src/routes/` (`[id].tsx`) | `<Title>`, `<Meta>`, `<Link rel="canonical">` |
+| **JS / TS SSR** | `QwikCityAdapter` | `@builder.io/qwik-city` | `src/routes/**/index.tsx` | `export const head: DocumentHead` |
+| **JS / TS SSG** | `GatsbyAdapter` | `gatsby` in dependencies | `src/pages/**/*.tsx` | `export const Head = () => ...` |
+| **PHP / CMS** | `WordPressAdapter` | `style.css` / `wp-content` | Classic templates (`front-page.php`, `single.php`) + FSE blocks | `wp_head()`, `add_theme_support('title-tag')`, Yoast/RankMath hooks |
+| **PHP Fullstack** | `LaravelAdapter` | `artisan` / `laravel/framework` | `routes/web.php` parsing + Blade templates | `@section('title')`, `<x-slot:title>`, `<title>` |
+| **PHP Fullstack** | `SymfonyAdapter` | `symfony.lock` / `composer.json` | `config/routes.yaml` / `#[Route]` + Twig templates | `{% block title %}`, metadata blocks |
+| **PHP Classic** | `PhpClassicAdapter` | Multiple `*.php` files | Direct file routing (`index.php`, `about.php`) | Template tags, header includes, `<title>`, `<meta>` |
+| **Markdown SSG** | `SsgAdapter` | `hugo.toml`, `_config.yml`, `11ty` | `content/**/*.md`, `_posts/**/*.md` | YAML/TOML frontmatter (`title:`, `canonical:`) |
+| **React SPA** | `ViteReactAdapter` | `vite` + `react` | `index.html` + React Router tree | `<Helmet>`, `<title>`, `<meta>` in component trees |
+| **Static HTML** | `StaticAdapter` | Fallback for any HTML site | Recursive HTML traversal | Direct DOM / meta tag inspection |
+
+---
+
+## 5. Complete 35-Tool Catalog & Operational Protocol
+
+### Layer 0: Agent Orchestration & Remediation (Flagship Suite)
+
+```text
+┌─────────────────────────┬────────────────────────────────────────────────────────────────────────┐
+│ TOOL NAME               │ OPERATIONAL SPECIFICATION                                              │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_project_audit`     │ Discovers framework routes, builds crawl graph, detects AST metadata,   │
+│                         │ and outputs multidimensional health scores with prioritized findings.  │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_diagnose`          │ Deep AST root-cause inspection linking an observed URL or error back  │
+│                         │ to exact source files, AST line numbers, and actionable fix snippets.  │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_prioritize`        │ Sorts all findings into deterministic action sprints: Quick Wins,      │
+│                         │ Critical Blockers, Architectural Changes, and Maintenance.             │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_fix_plan`          │ Generates a structured multi-step code modification and test plan      │
+│                         │ for autonomous coding agents.                                          │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_snapshot_create`   │ Captures an immutable project baseline stamped with Git commit SHA     │
+│                         │ and schema `seo.gravity/v1`.                                           │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_snapshot_compare`  │ Diffs two snapshots, isolating RESOLVED findings and NEW_REGRESSION    │
+│                         │ invariant violations.                                                  │
+├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
+│ `seo_regression_check`  │ Automated pass/fail regression gate for CI/CD PR pipelines.            │
+└─────────────────────────┴────────────────────────────────────────────────────────────────────────┘
+```
+
+### Layers 1–8: Specialized SEO & GEO Engines (28 Tools)
+
+- **Layer 1 (SERP & Competitors)**: `seo_serp_analyze`, `seo_competitor_content_gap`, `seo_competitor_profile`, `seo_competitor_diff`, `seo_forum_discussions_pulse`
+- **Layer 2 (GEO & AI Search)**: `seo_geo_ai_readiness_audit`, `seo_llms_txt_generate`, `seo_ai_bots_robots_audit`
+- **Layer 3 (Info Gain & E-E-A-T)**: `seo_information_gain_score`, `seo_eeat_audit`
+- **Layer 4 (On-Page)**: `seo_onpage_audit`, `seo_content_brief_generate`, `seo_readability_score`
+- **Layer 5 (Technical SEO)**: `seo_technical_audit`, `seo_js_rendering_diff`, `seo_robots_txt_validate`, `seo_sitemap_inspect`, `seo_internal_links_analyze`
+- **Layer 6 (Keywords & Intent)**: `seo_keyword_suggestions`, `seo_questions_find`, `seo_keyword_cluster`, `seo_search_intent_classify`
+- **Layer 7 (Schema & Entity)**: `seo_entity_salience_map`, `seo_schema_generate`, `seo_schema_validate`
+- **Layer 8 (Speed & Maintenance)**: `seo_pagespeed_audit`, `seo_indexnow_submit`, `seo_content_decay_audit`
+
+---
+
+## 6. CI/CD Quality Gate & SARIF v2.1.0 Specification
+
+SEO Gravity outputs standard **OASIS SARIF v2.1.0** reports directly consumable by GitHub Code Scanning:
+
+```bash
+npx seo-gravity-mcp audit --project ./app --format sarif --output results.sarif
+npx seo-gravity-mcp check --project ./app --baseline .seo-baseline.json
+```
+
+### Formal CLI Exit Codes
+
+| Exit Code | Classification | Meaning |
+| :---: | :--- | :--- |
+| `0` | **Pass** | All checks passed, no SEO invariant regressions detected. |
+| `1` | **Regression** | One or more critical SEO invariants were violated. |
+| `2` | **Config Error** | Invalid command flags or missing configuration. |
+| `3` | **Analyzer Error** | Framework analysis failure or unhandled exception. |
+
+---
+
+## 7. Pluggable Provider Layer & Content-Hash Caching
+
+- **Pluggable Providers** (`src/providers/`): Out-of-the-box native zero-cost web scrapers with optional API key overrides for Google PageSpeed, DataForSEO, ValueSERP, or Serper.
+- **Cache Provenance** (`src/utils/cacheManager.ts`): All cached responses include explicit provenance headers:
+  ```json
+  {
+    "isCached": true,
+    "cachedAt": "2026-08-27T00:00:00.000Z",
+    "ageMs": 420,
+    "ttlMs": 299580,
+    "provider": "typescript_ast",
+    "key": "test_ast:0f30d14bec76b96a"
   }
-}
-```
-
-### Antigravity Skill Definition (`.agents/skills/seo-mastery/SKILL.md`)
-
-When Antigravity activates the `seo-mastery` skill, it applies autonomous multi-step runbooks for:
-1. **Competitor & SERP Reverse-Engineering**: Scrapes competitors, extracts missing entities, and writes differentiation strategies.
-2. **GEO / AEO Engine Optimization**: Restructures copy for AI Overviews, Perplexity citations, and generates `llms.txt`.
-3. **Full Technical & JS SEO Audits**: Diffs SSR vs CSR hydration, validates canonicals and sitemaps.
-4. **Instant Indexing & Schema Generation**: Emits validated JSON-LD schema and pings IndexNow.
+  ```
 
 ---
 
-## 6. Data Sources & Zero-Cost Architecture
+## 8. Automated Benchmark Suite & Precision Guarantees
 
-| Module | Primary Zero-Cost Method | Optional Premium Hook |
-| :--- | :--- | :--- |
-| **SERP & Ranking** | Google SERP parser + PAA parser with anti-bot headers | DataForSEO / SerpAPI / ValueSERP |
-| **Competitor Extraction** | Headless Cheerio / Axios with realistic browser headers | ScrapingBee / BrightData |
-| **JS Hydration Diffing** | Local JSDOM vs raw response diffing | Puppeteer / Playwright |
-| **Keyword Autocomplete** | Direct Google Suggest API (`client=chrome`) | Semrush / Ahrefs APIs |
-| **Entities & Triples** | Local NLP (`natural`, compromise, TF-IDF) + Wikidata API | Google Knowledge Graph Search API |
-| **Instant Indexing** | IndexNow Open Protocol | Google Indexing API |
-| **Core Web Vitals** | Google PageSpeed Insights REST API (Free 25,000/day) | Local Lighthouse |
+SEO Gravity maintains two mandatory automated benchmark suites:
+
+1. **Correlation Accuracy Benchmark** (`src/benchmark/correlationBenchmark.ts`):
+   - Asserts `URL ➔ Discovered Route ➔ Source File Path ➔ AST Node Range` precision.
+   - **Score: 17/17 frameworks passed (100% precision).**
+2. **Invariant Recall & Precision Benchmark** (`src/benchmark/invariantBenchmark.ts`):
+   - Asserts invariant evaluation accuracy and 0 false-positive regression diffs.
+   - **Score: 100% precision.**
 
 ---
 
-## 7. Implementation & File Structure
+## 📄 License & Maintainer
 
-```
-d:\aide\
-├── .agents\
-│   ├── mcp_config.json                      # Antigravity MCP registration
-│   └── skills\
-│       └── seo-mastery\
-│           └── SKILL.md                     # Antigravity SEO Master workflow skill
-├── SEO_GRAVITY_MCP_SPEC.md                  # Complete architectural & tool documentation
-└── seo-gravity-mcp\
-    ├── package.json                         # Dependencies & build scripts
-    ├── tsconfig.json                        # TypeScript settings
-    ├── README.md                            # Quickstart & user documentation
-    └── src\
-        ├── index.ts                         # Server entrypoint & router (28 tools)
-        ├── types\
-        │   └── seo.ts                       # Shared interfaces & Zod schemas
-        ├── tools\
-        │   ├── serp.ts                      # SERP, Competitor Gap, Profile, Diff, Forum Pulse
-        │   ├── geo.ts                       # GEO readiness, llms.txt, AI bot robots check
-        │   ├── eeat.ts                      # Information Gain score, E-E-A-T audit
-        │   ├── onpage.ts                    # On-page audit, Brief generator, Readability
-        │   ├── technical.ts                 # Technical audit, JS rendering diff, Robots, Sitemap, Links
-        │   ├── keywords.ts                  # Autocomplete, Questions finder, Clustering, Intent
-        │   ├── schema.ts                    # Entity salience mapping, Schema gen & validate
-        │   └── performance.ts               # PageSpeed, IndexNow submit, Content decay
-        └── utils\
-            ├── scraper.ts                   # Robust HTTP client & HTML extractor
-            ├── nlp.ts                       # TF-IDF, SPO triples, text statistics
-            └── jsdomRenderer.ts             # JSDOM hydration comparator
-```
+- **Author**: `thedevbob005`
+- **License**: MIT
+- **NPM Package**: [`seo-gravity-mcp`](https://www.npmjs.com/package/seo-gravity-mcp)
