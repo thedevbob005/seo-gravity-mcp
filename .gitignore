@@ -29,3 +29,5 @@ Thumbs.db
 logs/
 *.log
 scratch/
+feedback.md
+*feedback*.md
