@@ -14,7 +14,7 @@
     "cli": "node dist/cli.js",
     "dev": "ts-node src/index.ts",
     "test": "node dist/test.js",
-    "test:benchmark": "node dist/benchmark/correlationBenchmark.js && node dist/benchmark/invariantBenchmark.js"
+    "test:benchmark": "node dist/benchmark/correlationBenchmark.js && node dist/benchmark/invariantBenchmark.js && node dist/benchmark/falsePositiveBenchmark.js"
   },
   "keywords": [
     "mcp",

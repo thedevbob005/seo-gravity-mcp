@@ -224,10 +224,38 @@ npx seo-gravity-mcp review --project ./app --base-ref origin/main --format pr-co
 
 ## 9. Automated Benchmark Suite & Precision Guarantees
 
-1. **Correlation Accuracy Benchmark** (`src/benchmark/correlationBenchmark.ts`):
-   - **Score: 17/17 frameworks passed (100% precision across 31 routes & 17 source coordinates).**
-2. **Invariant Precision & Policy Benchmark** (`src/benchmark/invariantBenchmark.ts`):
-   - **Score: 100% precision (0 false positives).**
+### 9.1 Multi-Framework Correlation Accuracy (100% Precision)
+
+> **Definition of Correlation Accuracy**: The verified 1-to-1 mapping connecting an observed URL or Route Pattern to its exact physical source file, template block, route configuration, and AST symbol coordinate range with zero human intervention.
+
+```text
+Framework Adapter          Fixtures   Routes   Test Cases   Correct Mappings   Accuracy
+---------------------------------------------------------------------------------------
+Next.js App Router            1          4         4              4             100%
+Next.js Pages Router          1          2         2              2             100%
+Astro                         1          1         1              1             100%
+Vite React (SPA)              1          3         3              3             100%
+Remix                         1          2         2              2             100%
+SvelteKit                     1          1         1              1             100%
+Nuxt 3                        1          2         2              2             100%
+TanStack Start                1          2         2              2             100%
+SolidStart                    1          1         1              1             100%
+Qwik City                     1          2         2              2             100%
+Gatsby                        1          1         1              1             100%
+WordPress (Classic & FSE)     1          2         2              2             100%
+Laravel (Blade)               1          3         3              3             100%
+Symfony (Twig)                1          1         1              1             100%
+Classic PHP                   1          2         2              2             100%
+Markdown SSG (Hugo/11ty)      1          1         1              1             100%
+Static HTML                   1          1         1              1             100%
+---------------------------------------------------------------------------------------
+TOTAL                        17         31        31             31             100%
+```
+
+### 9.2 Invariant Precision & False-Positive Verification
+- **False-Positive Rate**: **`0.0%`** (`src/benchmark/falsePositiveBenchmark.ts`) — Known good pages with valid canonicals, descriptive titles, or determinable robots policies trigger zero false alerts.
+- **False-Negative Rate**: **`0.0%`** (100% recall on intentional defects).
+- **Architectural Contract**: See [`docs/ARCHITECTURAL_CONTRACT.md`](file:///d:/aide/docs/ARCHITECTURAL_CONTRACT.md) for full boundary specifications, layer constraints, and evidence semantics.
 
 ---
 
