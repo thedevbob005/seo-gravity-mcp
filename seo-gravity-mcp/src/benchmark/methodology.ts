@@ -207,7 +207,7 @@ export function generateBenchmarkMethodologyReport(): BenchmarkMethodologyReport
 
   return {
     title: 'SEO Gravity Multi-Framework Correlation & Invariant Benchmark Methodology',
-    version: '1.3.1',
+    version: '1.3.2',
     evaluatedAt: new Date().toISOString(),
     definitionOfCorrelation: 'A correlation is defined as a verified mapping connecting an observed URL or Route Pattern to its exact physical source file, template, route configuration, and AST symbol coordinate range.',
     totalFrameworksTested: BENCHMARK_FIXTURES.length,

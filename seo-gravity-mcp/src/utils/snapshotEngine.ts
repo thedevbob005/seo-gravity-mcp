@@ -31,14 +31,16 @@ export interface CreateSnapshotOptions {
 
 export function computeLogicalPageId(urlOrPath: string): string {
   let clean = urlOrPath;
+  let origin = 'default';
   try {
     if (clean.startsWith('http')) {
       const u = new URL(clean);
+      origin = u.origin.toLowerCase();
       clean = u.pathname;
     }
   } catch {}
   clean = clean.replace(/\/$/, '') || '/';
-  return 'page_' + crypto.createHash('md5').update(clean).digest('hex').substring(0, 10);
+  return 'page_' + crypto.createHash('sha256').update(`${origin}:${clean}`).digest('hex').substring(0, 12);
 }
 
 export function extractGitMetadata(projectDir: string): GitMetadata {
@@ -417,40 +419,76 @@ export function compareSnapshots(
     }
   }
 
-  // Invariant-based diffing
+  // Invariant-based diffing across Full Key Union (detects disappearing invariants)
   const invariantDiffs: InvariantDiffItem[] = [];
   const baselineInvariants = new Map<string, SEOInvariant>();
   for (const inv of baseline.invariants || []) {
     baselineInvariants.set(`${inv.id}:${inv.url}`, inv);
   }
 
-  for (const cInv of current.invariants || []) {
-    const key = `${cInv.id}:${cInv.url}`;
+  const currentInvariants = new Map<string, SEOInvariant>();
+  for (const inv of current.invariants || []) {
+    currentInvariants.set(`${inv.id}:${inv.url}`, inv);
+  }
+
+  const allInvariantKeys = new Set([
+    ...baselineInvariants.keys(),
+    ...currentInvariants.keys()
+  ]);
+
+  for (const key of allInvariantKeys) {
     const bInv = baselineInvariants.get(key);
+    const cInv = currentInvariants.get(key);
     let status: InvariantDiffItem['status'] = 'UNCHANGED';
 
-    if (bInv) {
+    if (bInv && cInv) {
       if (bInv.satisfied && !cInv.satisfied) {
         status = 'NEW_REGRESSION';
       } else if (!bInv.satisfied && cInv.satisfied) {
         status = 'RESOLVED';
       }
-    } else {
+      invariantDiffs.push({
+        invariantId: cInv.id,
+        logicalPageId: cInv.logicalPageId,
+        url: cInv.url,
+        status,
+        baselineSatisfied: bInv.satisfied,
+        currentSatisfied: cInv.satisfied,
+        requirementLevel: cInv.requirementLevel || 'REQUIRED',
+        severity: cInv.severity || 'high',
+        evidence: cInv.evidence,
+        message: `${cInv.description}: ${status}`
+      });
+    } else if (cInv && !bInv) {
       status = cInv.satisfied ? 'UNCHANGED' : 'NEW_REGRESSION';
+      invariantDiffs.push({
+        invariantId: cInv.id,
+        logicalPageId: cInv.logicalPageId,
+        url: cInv.url,
+        status,
+        baselineSatisfied: false,
+        currentSatisfied: cInv.satisfied,
+        requirementLevel: cInv.requirementLevel || 'REQUIRED',
+        severity: cInv.severity || 'high',
+        evidence: cInv.evidence,
+        message: `${cInv.description}: ${status}`
+      });
+    } else if (bInv && !cInv) {
+      // Invariant disappeared in current snapshot!
+      status = bInv.satisfied ? 'NEW_REGRESSION' : 'RESOLVED';
+      invariantDiffs.push({
+        invariantId: bInv.id,
+        logicalPageId: bInv.logicalPageId,
+        url: bInv.url,
+        status,
+        baselineSatisfied: bInv.satisfied,
+        currentSatisfied: false,
+        requirementLevel: bInv.requirementLevel || 'REQUIRED',
+        severity: bInv.severity || 'high',
+        evidence: bInv.evidence,
+        message: `${bInv.description}: Invariant disappeared (${status})`
+      });
     }
-
-    invariantDiffs.push({
-      invariantId: cInv.id,
-      logicalPageId: cInv.logicalPageId,
-      url: cInv.url,
-      status,
-      baselineSatisfied: bInv?.satisfied ?? false,
-      currentSatisfied: cInv.satisfied,
-      requirementLevel: cInv.requirementLevel || 'REQUIRED',
-      severity: cInv.severity || 'high',
-      evidence: cInv.evidence,
-      message: `${cInv.description}: ${status}`
-    });
   }
 
   // Score deltas

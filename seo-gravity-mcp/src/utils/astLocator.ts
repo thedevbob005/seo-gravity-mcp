@@ -140,17 +140,17 @@ export function inspectSourceFileAST(filePath: string): ASTMetadataInspection {
 
   visit(sourceFile);
 
-  // Fallback regex detection if AST node missed subtle structures
-  if (!hasMetadataExport && /export\s+const\s+metadata\b/.test(content)) {
+  // Strict fallback regex detection if AST missed non-standard export structures
+  if (!hasMetadataExport && /export\s+const\s+metadata\b/i.test(content)) {
     hasMetadataExport = true;
   }
-  if (!hasGenerateMetadata && /export\s+(async\s+)?function\s+generateMetadata\b/.test(content)) {
+  if (!hasGenerateMetadata && /export\s+(async\s+)?function\s+generateMetadata\b/i.test(content)) {
     hasGenerateMetadata = true;
   }
-  if (!hasCanonicalDeclaration && /canonical/.test(content)) {
+  if (!hasCanonicalDeclaration && (/(rel=["']canonical["']|alternates:\s*\{[^}]*canonical:)/i.test(content))) {
     hasCanonicalDeclaration = true;
   }
-  if (!hasSchemaMarkup && /application\/ld\+json/.test(content)) {
+  if (!hasSchemaMarkup && /application\/ld\+json/i.test(content)) {
     hasSchemaMarkup = true;
   }
 

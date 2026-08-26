@@ -1,4 +1,5 @@
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 import { XMLParser } from 'fast-xml-parser';
 import { fetchAndParsePage, getRandomUserAgent } from '../utils/scraper.js';
 import { compareServerVsClientDom } from '../utils/jsdomRenderer.js';
@@ -16,14 +17,17 @@ export async function auditTechnical(url: string): Promise<TechnicalAuditReport>
       maxRedirects: 10,
       validateStatus: () => true
     });
+
+    if (response.request?.res?.responseUrl && response.request.res.responseUrl !== url) {
+      redirectChain.push(url, response.request.res.responseUrl);
+    }
   } catch (err: any) {
     throw new Error(`Technical audit failed to connect to ${url}: ${err.message}`);
   }
 
   const responseTimeMs = Date.now() - startTime;
-  const page = await fetchAndParsePage(url);
-  const html = page.html;
-  const $ = page.$;
+  const rawHtml = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
+  const $ = cheerio.load(rawHtml);
 
   // Canonical check
   const canonicalVal = $('link[rel="canonical"]').attr('href') || '';

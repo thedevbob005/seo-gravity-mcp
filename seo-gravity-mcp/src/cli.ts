@@ -7,6 +7,7 @@ import { runDifferentialAudit } from './utils/gitDiffEngine.js';
 import { exportFindingsToSarif } from './utils/sarifExporter.js';
 import { PolicyLoader } from './policy/loader.js';
 import { formatPrCommentMarkdown } from './utils/prCommentFormatter.js';
+import { VERSION } from './version.js';
 
 export const EXIT_CODES = {
   PASS: 0,
@@ -60,7 +61,7 @@ async function runCli() {
           }
         } else {
           // Pretty format
-          console.log(`\n🚀 SEO Gravity CLI (v1.3.1) — SEO Engineering Infrastructure\n`);
+          console.log(`\n🚀 SEO Gravity CLI (v${VERSION}) — SEO Engineering Infrastructure\n`);
           console.log(`Auditing project at: ${path.resolve(projectDir)}...`);
           console.log(`Policy Profile: ${policy.profile}`);
           console.log(`\n========================================`);
@@ -99,7 +100,7 @@ async function runCli() {
         if (format === 'json') {
           console.log(JSON.stringify(snap.snapshot, null, 2));
         } else {
-          console.log(`\n🚀 SEO Gravity CLI (v1.3.1)\n`);
+          console.log(`\n🚀 SEO Gravity CLI (v${VERSION})\n`);
           console.log(`✅ Snapshot created and saved to: ${snap.savedToPath}`);
           console.log(`Score: ${snap.snapshot.scores.overallHealth}/100 | Invariants: ${snap.snapshot.invariants?.length || 0}`);
         }
@@ -113,7 +114,7 @@ async function runCli() {
           process.exit(EXIT_CODES.CONFIG_ERROR);
         }
 
-        const checkRes = await checkRegression(projectDir, baselinePath, baseUrl);
+        const checkRes = await checkRegression(projectDir, baselinePath, baseUrl, policy);
 
         if (format === 'sarif') {
           const sarif = exportFindingsToSarif(checkRes.regressionReport.newRegressions, projectDir);

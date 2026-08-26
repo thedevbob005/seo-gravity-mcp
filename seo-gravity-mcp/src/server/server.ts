@@ -6,12 +6,13 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { TOOLS, executeTool } from './registry.js';
 import { ServerOptions } from './types.js';
+import { VERSION, PACKAGE_NAME } from '../version.js';
 
 export function createMcpServer(options: ServerOptions = {}) {
   const server = new Server(
     {
-      name: options.name || 'seo-gravity-mcp',
-      version: options.version || '1.2.0'
+      name: options.name || PACKAGE_NAME,
+      version: options.version || VERSION
     },
     {
       capabilities: {

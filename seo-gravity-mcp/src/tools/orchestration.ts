@@ -14,10 +14,10 @@ import {
   createProjectSnapshot,
   compareSnapshots
 } from '../utils/snapshotEngine.js';
-import {
-  calculateMultiDimensionalScores
-} from '../utils/findingEngine.js';
+import { calculateMultiDimensionalScores } from '../utils/findingEngine.js';
 import { inspectSourceFileAST } from '../utils/astLocator.js';
+import { PolicyLoader } from '../policy/loader.js';
+import { PolicyConfig } from '../policy/types.js';
 
 export async function auditProject(
   projectPath: string,
@@ -342,8 +342,8 @@ export async function createSnapshotTool(
   savedToPath?: string;
 }> {
   const snapshot = await createProjectSnapshot(projectPath, { baseUrl });
-
   let savedToPath: string | undefined;
+
   if (outputPath) {
     const absOut = path.resolve(outputPath);
     fs.mkdirSync(path.dirname(absOut), { recursive: true });
@@ -380,29 +380,35 @@ export async function compareSnapshotsTool(
 export async function checkRegression(
   projectPath: string,
   baselineSnapshot: ProjectSnapshot | string,
-  baseUrl?: string
+  baseUrl?: string,
+  policyPathOrConfig?: string | PolicyConfig
 ): Promise<{
   schemaVersion: 'seo.gravity/v1';
   pass: boolean;
   verdict: string;
+  policyProfile: string;
   regressionReport: RegressionReport;
 }> {
+  const policy = typeof policyPathOrConfig === 'object'
+    ? policyPathOrConfig
+    : PolicyLoader.resolvePolicy(projectPath, policyPathOrConfig);
+
   const currentSnapshot = await createProjectSnapshot(projectPath, { baseUrl });
   const report = await compareSnapshotsTool(baselineSnapshot, currentSnapshot);
 
-  const hasCriticalRegressions = report.newRegressions.some(
-    r => r.severity === 'critical' || r.severity === 'high'
-  );
+  const invariantDiffs = report.invariantDiffs || [];
+  const policyBreaches = invariantDiffs.filter(d => PolicyLoader.isRegressionBreachingPolicy(d, policy));
 
-  const pass = !hasCriticalRegressions && report.status !== 'REGRESSION_DETECTED';
+  const pass = policyBreaches.length === 0;
   const verdict = pass
-    ? '✅ PASSED: No critical SEO regressions detected.'
-    : `🚨 FAILED: ${report.newRegressions.length} new SEO regression(s) detected.`;
+    ? `✅ PASSED (Policy: ${policy.profile}): No policy-breaching SEO invariant regressions detected.`
+    : `🚨 FAILED (Policy: ${policy.profile}): ${policyBreaches.length} invariant regression(s) breached policy thresholds.`;
 
   return {
     schemaVersion: 'seo.gravity/v1',
     pass,
     verdict,
+    policyProfile: policy.profile,
     regressionReport: report
   };
 }

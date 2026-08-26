@@ -19,6 +19,11 @@ export interface CacheMetadata {
 
 export class CacheManager {
   private cache = new Map<string, CacheEntry<any>>();
+  private maxEntries: number;
+
+  constructor(maxEntries = 5000) {
+    this.maxEntries = maxEntries;
+  }
 
   public computeKey(namespace: string, input: any): string {
     const serialized = typeof input === 'string' ? input : JSON.stringify(input);
@@ -33,6 +38,9 @@ export class CacheManager {
       this.cache.delete(key);
       return null;
     }
+    // Re-insert to keep LRU order
+    this.cache.delete(key);
+    this.cache.set(key, entry);
     return entry.value as T;
   }
 
@@ -44,6 +52,10 @@ export class CacheManager {
       this.cache.delete(key);
       return null;
     }
+    // Re-insert to keep LRU order
+    this.cache.delete(key);
+    this.cache.set(key, entry);
+
     return {
       value: entry.value as T,
       metadata: {
@@ -58,6 +70,15 @@ export class CacheManager {
   }
 
   public set<T>(key: string, value: T, ttlMs = 300000, provider = 'internal'): void {
+    if (this.cache.size >= this.maxEntries) {
+      this.sweep();
+      if (this.cache.size >= this.maxEntries) {
+        // Evict oldest inserted key (first key in map)
+        const oldestKey = this.cache.keys().next().value;
+        if (oldestKey) this.cache.delete(oldestKey);
+      }
+    }
+
     const hash = crypto.createHash('md5').update(JSON.stringify(value)).digest('hex');
     this.cache.set(key, {
       value,
@@ -66,6 +87,18 @@ export class CacheManager {
       provider,
       hash
     });
+  }
+
+  public sweep(): number {
+    const now = Date.now();
+    let evicted = 0;
+    for (const [key, entry] of this.cache.entries()) {
+      if (now > entry.expiresAt) {
+        this.cache.delete(key);
+        evicted++;
+      }
+    }
+    return evicted;
   }
 
   public has(key: string): boolean {

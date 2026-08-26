@@ -130,23 +130,15 @@ export async function scrapeGoogleSerp(
       if (organicResults.length >= numResults) return false;
     });
 
-    // If Google blocked direct HTML or formatted differently, populate with intelligent fallback
+    // If Google blocked direct HTML or formatted differently, return clean empty organic array
     if (organicResults.length === 0) {
-      // Fallback query to autocomplete to at least provide rich keyword signals
       const autoSuggestions = await getGoogleAutocomplete(query, language, country);
       return {
         query,
-        organicResults: [
-          {
-            rank: 1,
-            title: `${query} - Comprehensive Guide & Overview`,
-            url: `https://example.com/guide/${encodeURIComponent(query.toLowerCase().replace(/\s+/g, '-'))}`,
-            snippet: `In-depth analysis, top recommendations, and technical breakdown for ${query}.`
-          }
-        ],
+        organicResults: [],
         peopleAlsoAsk: autoSuggestions.filter(s => /^(what|how|why|is|can|best)/i.test(s)).slice(0, 5),
         relatedSearches: autoSuggestions.slice(0, 8),
-        serpFeaturesDetected: ['Standard Organic Grid']
+        serpFeaturesDetected: ['Degraded / Rate-Limited']
       };
     }
 
@@ -158,14 +150,13 @@ export async function scrapeGoogleSerp(
       serpFeaturesDetected
     };
   } catch (err: any) {
-    // Graceful fallback
     const suggestions = await getGoogleAutocomplete(query, language, country);
     return {
       query,
       organicResults: [],
       peopleAlsoAsk: [],
       relatedSearches: suggestions.slice(0, 8),
-      serpFeaturesDetected: ['Network Offline / Fallback']
+      serpFeaturesDetected: ['Network Offline / Degraded']
     };
   }
 }
@@ -197,29 +188,37 @@ export async function scrapeForumDiscussions(topic: string): Promise<ForumDiscus
     });
   });
 
-  // Extract common problem words and sentiments
-  const combinedText = rankingDiscussions.map(d => `${d.title} ${d.snippet}`).join(' ');
-  const commonThemes = [
-    'Real-world reliability vs advertised claims',
-    'Pricing transparency and hidden fees',
-    'Ease of onboarding and learning curve',
-    'Customer support responsiveness and troubleshooting',
-    'Long-term durability and value for money'
+  if (rankingDiscussions.length === 0) {
+    return {
+      topic,
+      rankingDiscussions: [],
+      extractedThemes: [],
+      frequentUserPainPoints: [],
+      consensusRecommendations: []
+    };
+  }
+
+  // Derive extracted themes dynamically from actual retrieved discussion titles
+  const extractedThemes: string[] = rankingDiscussions
+    .map(d => d.title.trim())
+    .filter(t => t.length > 5)
+    .slice(0, 5);
+
+  const painPoints: string[] = rankingDiscussions
+    .map(d => d.snippet)
+    .filter(s => s.length > 15)
+    .slice(0, 3);
+
+  const recommendations: string[] = [
+    `Address user discussion topics: ${extractedThemes.slice(0, 2).join('; ')}`,
+    `Incorporate direct answers to forum questions in content FAQ sections.`
   ];
 
   return {
     topic,
     rankingDiscussions,
-    extractedThemes: commonThemes,
-    frequentUserPainPoints: [
-      `Users seeking authentic comparison for '${topic}' without affiliate bias`,
-      'Frustration with confusing configuration options and documentation gaps',
-      'Desire for direct pros vs cons breakdowns and benchmark benchmarks'
-    ],
-    consensusRecommendations: [
-      'Include transparent comparison tables with direct caveats',
-      'Address exact user questions found in Reddit threads as an FAQ section',
-      'Provide step-by-step guidance rather than high-level promotional summaries'
-    ]
+    extractedThemes,
+    frequentUserPainPoints: painPoints,
+    consensusRecommendations: recommendations
   };
 }

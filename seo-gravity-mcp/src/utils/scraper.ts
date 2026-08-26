@@ -117,13 +117,25 @@ export async function fetchAndParsePage(input: string, baseOrigin?: string): Pro
   const external: string[] = [];
 
   $('a[href]').each((_, el) => {
-    const href = $(el).attr('href')?.trim();
+    const href = $(el).attr('href')?.trim() || '';
     if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
 
-    if (href.startsWith('/') || (domain && href.includes(domain))) {
-      internal.push(href);
-    } else if (href.startsWith('http')) {
-      external.push(href);
+    try {
+      if (href.startsWith('/')) {
+        internal.push(href);
+      } else if (href.startsWith('http')) {
+        const parsed = new URL(href);
+        if (domain && parsed.hostname === domain) {
+          internal.push(parsed.pathname + parsed.search);
+        } else {
+          external.push(href);
+        }
+      } else if (!href.includes(':')) {
+        // Relative link (e.g. "about", "../docs")
+        internal.push('/' + href.replace(/^\.?\//, ''));
+      }
+    } catch {
+      // Ignore malformed URLs
     }
   });
 

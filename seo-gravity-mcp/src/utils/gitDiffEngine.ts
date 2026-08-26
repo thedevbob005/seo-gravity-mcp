@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DiscoveredRoute, Finding, ProjectSnapshot } from '../types/findings.js';
@@ -6,6 +6,8 @@ import { getProjectAdapter } from './projectScanner.js';
 import { createProjectSnapshot } from './snapshotEngine.js';
 import { inspectSourceFileAST } from './astLocator.js';
 import { InvariantType } from '../types/canonical.js';
+
+const SAFE_GIT_REF = /^[a-zA-Z0-9_.~^/@-]+$/;
 
 export interface SemanticChangeCategory {
   affectsMetadata: boolean;
@@ -41,8 +43,12 @@ export interface DifferentialAuditResult {
 }
 
 export function getChangedFilesSince(projectDir: string, baseRef = 'HEAD~1'): string[] {
+  if (!SAFE_GIT_REF.test(baseRef)) {
+    throw new Error(`Invalid Git ref format: '${baseRef}' contains unsafe characters.`);
+  }
+
   try {
-    const output = execSync(`git diff --name-only ${baseRef}`, {
+    const output = execFileSync('git', ['diff', '--name-only', baseRef], {
       cwd: projectDir,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore']
@@ -50,7 +56,7 @@ export function getChangedFilesSince(projectDir: string, baseRef = 'HEAD~1'): st
     return output.split('\n').map(l => l.trim().replace(/\\/g, '/')).filter(Boolean);
   } catch {
     try {
-      const status = execSync('git status --porcelain', {
+      const status = execFileSync('git', ['status', '--porcelain'], {
         cwd: projectDir,
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'ignore']
