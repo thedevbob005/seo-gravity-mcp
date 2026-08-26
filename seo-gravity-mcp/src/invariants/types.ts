@@ -1,6 +1,16 @@
 import { SeverityLevel, Provenance } from '../types/findings.js';
+import { PolymorphicEvidence } from '../types/evidence.js';
 
-export type InvariantScope = 'site_wide' | 'page' | 'route' | 'crawl_graph';
+export type RequirementLevel = 'REQUIRED' | 'CONDITIONAL' | 'RECOMMENDED' | 'OPTIONAL';
+
+export type InvariantScope =
+  | 'SITE'
+  | 'ROUTE'
+  | 'PAGE'
+  | 'COMPONENT'
+  | 'RESOURCE'
+  | 'site_wide'
+  | 'crawl_graph';
 
 export type InvariantCategory =
   | 'http'
@@ -34,6 +44,7 @@ export interface InvariantEvaluationResult {
   satisfied: boolean;
   observedCondition: string;
   evidence: string;
+  polymorphicEvidence?: PolymorphicEvidence;
 }
 
 export interface InvariantDefinition {
@@ -41,6 +52,7 @@ export interface InvariantDefinition {
   name: string;
   description: string;
   category: InvariantCategory;
+  requirementLevel: RequirementLevel;
   severity: SeverityLevel;
   scope: InvariantScope;
   expectedCondition: string;

@@ -1,7 +1,7 @@
-# 🚀 SEO Gravity: Full System Technical Specification & Architectural Blueprint (v1.2.1)
+# 🚀 SEO Gravity: Full System Technical Specification & Architectural Blueprint (v1.3.0)
 
 > **The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.**
-> Author: **thedevbob005** | Repository: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp) | Version: **1.2.1**
+> Author: **thedevbob005** | Repository: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp) | Version: **1.3.0**
 
 ---
 
@@ -10,11 +10,12 @@
 1. [System Overview & Positioning](#1-system-overview--positioning)
 2. [5-Layer System Architecture](#2-5-layer-system-architecture)
 3. [Canonical Data Model & Invariant Truth System](#3-canonical-data-model--invariant-truth-system)
-4. [17-Framework Adapter Matrix & Correlation Engine](#4-17-framework-adapter-matrix--correlation-engine)
-5. [Complete 35-Tool Catalog & Operational Protocol](#5-complete-35-tool-catalog--operational-protocol)
-6. [CI/CD Quality Gate & SARIF v2.1.0 Specification](#6-cicd-quality-gate--sarif-v210-specification)
-7. [Pluggable Provider Layer & Content-Hash Caching](#7-pluggable-provider-layer--content-hash-caching)
-8. [Automated Benchmark Suite & Precision Guarantees](#8-automated-benchmark-suite--precision-guarantees)
+4. [Project Policy Engine (`.seo-gravity.yml`)](#4-project-policy-engine-seo-gravityyml)
+5. [17-Framework Adapter Matrix & Correlation Engine](#5-17-framework-adapter-matrix--correlation-engine)
+6. [Complete 35-Tool Catalog & Operational Protocol](#6-complete-35-tool-catalog--operational-protocol)
+7. [CI/CD Quality Gate, SARIF v2.1.0 & PR Comments](#7-cicd-quality-gate-sarif-v210--pr-comments)
+8. [Pluggable Provider Layer & Content-Hash Caching](#8-pluggable-provider-layer--content-hash-caching)
+9. [Automated Benchmark Suite & Precision Guarantees](#9-automated-benchmark-suite--precision-guarantees)
 
 ---
 
@@ -27,7 +28,7 @@ Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) in mod
 ### Core Design Philosophy: *"Code computes. AI interprets."*
 - **Deterministic Computation**: Framework detection, route mapping, AST line pinpointing, crawl graphs, invariant evaluation, and priority ranking are calculated with deterministic algorithms.
 - **AI Agent Orchestration**: High-level agents receive structured JSON findings, exact source code coordinates, and ready-to-apply code fix blueprints to remediate issues autonomously.
-- **Invariant-First Regression Gating**: Regressions in CI/CD are judged by semantic ground truth invariants (e.g. 200 $\rightarrow$ 404, canonical present $\rightarrow$ missing, indexable $\rightarrow$ noindex), eliminating flaky score-based heuristics.
+- **Invariant-First Regression Gating**: Regressions in CI/CD are judged by semantic ground truth invariants (e.g. 200 $\rightarrow$ 404, canonical present $\rightarrow$ missing, indexable $\rightarrow$ noindex), evaluated against customizable project policies.
 
 ```text
  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -46,7 +47,7 @@ Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) in mod
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ LAYER 1: AGENT & CLI INTERFACE                                              │
 │ • Modular MCP Server (`src/server/server.ts`, `src/server/registry.ts`)     │
-│ • Standalone CLI Binary (`src/cli.ts`) with SARIF & JSON output             │
+│ • Standalone CLI Binary (`src/cli.ts`) with SARIF, JSON, & PR Comment output│
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ LAYER 2: INTELLIGENCE & REASONING LAYER                                     │
 │ • Deterministic Priority Scoring: (Impact × Confidence × Reach) / Effort     │
@@ -54,14 +55,16 @@ Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) in mod
 │ • Strategic Opportunity Engine (`src/utils/opportunityEngine.ts`)           │
 │ • SEO Experimentation Engine (`src/utils/experimentEngine.ts`)              │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ LAYER 3: ANALYSIS & INVARIANT LAYER                                         │
+│ LAYER 3: ANALYSIS, POLICY & INVARIANT LAYER                                 │
 │ • Formal Invariant Registry (`src/invariants/registry.ts`)                  │
+│ • Project Policy Engine (`src/policy/loader.ts`, `.seo-gravity.yml`)        │
 │ • Git Baseline Snapshot Engine (`src/utils/snapshotEngine.ts`)              │
 │ • Semantic AST Git Differential Engine (`src/utils/gitDiffEngine.ts`)       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ LAYER 4: OBSERVATION LAYER (Factual Raw State)                              │
 │ • Separation of Raw Observations from Computed Findings                     │
 │ • Page Identity Normalization (`logicalPageId`)                             │
+│ • Polymorphic Source Evidence: AST, Template, RouteConfig, DOM, Runtime     │
 │ • AST Line-Range & Coordinate Locator (`src/utils/astLocator.ts`)           │
 │ • Breadth-First Crawl Graph Builder (`src/utils/crawlGraph.ts`)             │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -80,7 +83,7 @@ Search Engine Optimization (SEO) and Generative Engine Optimization (GEO) in mod
 
 To maintain absolute data integrity, SEO Gravity separates raw measurements from diagnostic conclusions:
 
-1. **`Observation`**: An immutable measurement of factual state from a verified source.
+1. **`Observation`**: An immutable measurement of factual state from a verified source with polymorphic evidence.
    ```typescript
    export interface Observation {
      id: string;
@@ -88,8 +91,9 @@ To maintain absolute data integrity, SEO Gravity separates raw measurements from
      observedUrl: string;
      key: string;
      rawValue: any;
-     normalizedValue: any;
+     normalizedValue?: string | number | boolean;
      provenance: Provenance;
+     evidence?: PolymorphicEvidence;
    }
    ```
 2. **`Finding`**: An actionable diagnostic conclusion derived by evaluating observations against SEO rules and invariants.
@@ -109,29 +113,49 @@ To maintain absolute data integrity, SEO Gravity separates raw measurements from
    }
    ```
 
-### 3.2 Formal SEO Invariant Registry
+### 3.2 Formal SEO Invariant Registry with Requirement Levels
 
 SEO Gravity evaluates facts against formal invariant contracts defined in [`src/invariants/registry.ts`](file:///d:/aide/seo-gravity-mcp/src/invariants/registry.ts):
 
-| Invariant ID | Name | Target Scope | Semantic Failure Condition |
-| :--- | :--- | :--- | :--- |
-| `INV-HTTP-200` | HTTP Success Status | Route | HTTP status is 4xx, 5xx, or route unresolvable |
-| `INV-CANONICAL-RESOLVES` | Canonical URL Declaration | Page | Indexable page lacks `<link rel="canonical">` or canonical metadata |
-| `INV-TITLE-PRESENT` | Title Tag Metadata | Page | AST/HTML has empty or missing `<title>` |
-| `INV-LINK-ACCESSIBLE` | Link Reachability | Crawl Graph | Public page has 0 internal inlinks (Orphan Page) |
-| `INV-ROBOTS-ALLOWED` | Robots Configuration | Site | Missing `robots.txt` or syntax disallows essential assets |
-| `INV-SITEMAP-PRESENT` | XML Sitemap Configuration | Site | Missing `sitemap.xml` or dynamic sitemap route |
-| `INV-LLMS-TXT` | AI Context Documentation | Site | Missing `/llms.txt` context file for AI crawlers |
+| Invariant ID | Name | Scope | Requirement Level | Severity | Semantic Failure Condition |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| `INV-HTTP-200` | HTTP Success Status | Route | **`REQUIRED`** | Critical | HTTP status is 4xx, 5xx, or route unresolvable. |
+| `INV-CANONICAL-RESOLVES` | Canonical URL Declaration | Page | **`CONDITIONAL`** | High | Indexable page lacks `<link rel="canonical">` or canonical metadata. |
+| `INV-TITLE-PRESENT` | Title Tag Metadata | Page | **`REQUIRED`** | High | AST/Template/HTML has empty or missing `<title>`. |
+| `INV-LINK-ACCESSIBLE` | Link Reachability | Crawl Graph | **`CONDITIONAL`** | Medium | Public page has 0 internal inlinks (Orphan Page). |
+| `INV-ROBOTS-ALLOWED` | Robots Policy Determinable | Site | **`CONDITIONAL`** | Medium | Robots crawl policy is indeterminable or blocks assets. |
+| `INV-SITEMAP-PRESENT` | XML Sitemap Configuration | Site | **`RECOMMENDED`** | Medium | Missing `sitemap.xml` or dynamic sitemap route. |
+| `INV-LLMS-TXT` | AI Context Documentation | Site | **`RECOMMENDED`** | Low | Missing `/llms.txt` context file for AI crawlers. |
 
 ---
 
-## 4. 17-Framework Adapter Matrix & Correlation Engine
+## 4. Project Policy Engine (`.seo-gravity.yml`)
+
+Projects can define organizational SEO standards via `.seo-gravity.yml` using preset profiles (`strict`, `balanced`, `startup`, `ecommerce`, `documentation`) or custom overrides:
+
+```yaml
+version: 1
+profile: balanced
+
+policy:
+  canonical: required
+  sitemap: recommended
+  llms_txt: recommended
+
+regression:
+  fail_on_levels: [REQUIRED, CONDITIONAL]
+  fail_on_severities: [critical, high]
+```
+
+---
+
+## 5. 17-Framework Adapter Matrix & Correlation Engine
 
 SEO Gravity includes dedicated adapters implementing the `FrameworkAdapter` interface, guaranteeing **100% correlation precision**:
 
 | Category | Framework Adapter | Detection Rules | Route & Template Parsing | AST / Code Inspection Target |
 | :--- | :--- | :--- | :--- | :--- |
-| **JS / TS SSR** | `NextAppAdapter` | `next` + `app/` | App Router directory hierarchy, route groups `(group)`, parallel `@slot`, dynamic `[slug]` | `export const metadata: Metadata`, `generateMetadata()`, `sitemap.ts`, `robots.ts` |
+| **JS / TS SSR** | `NextAppAdapter` | `next` + `app/` | App Router hierarchy, route groups `(group)`, parallel `@slot`, dynamic `[slug]` | `export const metadata: Metadata`, `generateMetadata()`, `sitemap.ts`, `robots.ts` |
 | **JS / TS SSR** | `NextPagesAdapter` | `next` + `pages/` | Pages router hierarchy, dynamic `[id]` | `<Head>`, `<title>`, `<meta>`, `<NextSeo>`, canonical `<link>` |
 | **JS / TS SSR** | `AstroAdapter` | `astro` in dependencies | `src/pages/**/*.{astro,md,mdx}` | Frontmatter YAML/JS, `<title>`, `astro:head` |
 | **JS / TS SSR** | `RemixAdapter` | `@remix-run/react` | Flat routes in `app/routes/`, index `_index.tsx`, dynamic `$slug` | `export const meta: MetaFunction`, `export const links` |
@@ -151,35 +175,17 @@ SEO Gravity includes dedicated adapters implementing the `FrameworkAdapter` inte
 
 ---
 
-## 5. Complete 35-Tool Catalog & Operational Protocol
+## 6. Complete 35-Tool Catalog & Operational Protocol
 
 ### Layer 0: Agent Orchestration & Remediation (Flagship Suite)
 
-```text
-┌─────────────────────────┬────────────────────────────────────────────────────────────────────────┐
-│ TOOL NAME               │ OPERATIONAL SPECIFICATION                                              │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_project_audit`     │ Discovers framework routes, builds crawl graph, detects AST metadata,   │
-│                         │ and outputs multidimensional health scores with prioritized findings.  │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_diagnose`          │ Deep AST root-cause inspection linking an observed URL or error back  │
-│                         │ to exact source files, AST line numbers, and actionable fix snippets.  │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_prioritize`        │ Sorts all findings into deterministic action sprints: Quick Wins,      │
-│                         │ Critical Blockers, Architectural Changes, and Maintenance.             │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_fix_plan`          │ Generates a structured multi-step code modification and test plan      │
-│                         │ for autonomous coding agents.                                          │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_snapshot_create`   │ Captures an immutable project baseline stamped with Git commit SHA     │
-│                         │ and schema `seo.gravity/v1`.                                           │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_snapshot_compare`  │ Diffs two snapshots, isolating RESOLVED findings and NEW_REGRESSION    │
-│                         │ invariant violations.                                                  │
-├─────────────────────────┼────────────────────────────────────────────────────────────────────────┤
-│ `seo_regression_check`  │ Automated pass/fail regression gate for CI/CD PR pipelines.            │
-└─────────────────────────┴────────────────────────────────────────────────────────────────────────┘
-```
+- `seo_project_audit`: Workspace scan, route discovery, crawl graph, multidimensional scores.
+- `seo_diagnose`: Root-cause AST inspection with file/line targets and fix snippets.
+- `seo_prioritize`: Sprints ranked by `(Impact × Confidence × Reach) / Effort`.
+- `seo_fix_plan`: Step-by-step code modification and test plan.
+- `seo_snapshot_create`: Git commit stamped baseline snapshot (`seo.gravity/v1`).
+- `seo_snapshot_compare`: Invariant-based diffing isolating regressions and improvements.
+- `seo_regression_check`: Automated pass/fail CI gate.
 
 ### Layers 1–8: Specialized SEO & GEO Engines (28 Tools)
 
@@ -194,53 +200,34 @@ SEO Gravity includes dedicated adapters implementing the `FrameworkAdapter` inte
 
 ---
 
-## 6. CI/CD Quality Gate & SARIF v2.1.0 Specification
-
-SEO Gravity outputs standard **OASIS SARIF v2.1.0** reports directly consumable by GitHub Code Scanning:
+## 7. CI/CD Quality Gate, SARIF v2.1.0 & PR Comments
 
 ```bash
+# 1. Output GitHub Code Scanning SARIF
 npx seo-gravity-mcp audit --project ./app --format sarif --output results.sarif
-npx seo-gravity-mcp check --project ./app --baseline .seo-baseline.json
+
+# 2. Output Developer PR Comment Markdown
+npx seo-gravity-mcp check --project ./app --baseline .seo-baseline.json --format pr-comment
+
+# 3. Targeted SEO Code Review on modified routes
+npx seo-gravity-mcp review --project ./app --base-ref origin/main --format pr-comment
 ```
 
-### Formal CLI Exit Codes
+---
 
-| Exit Code | Classification | Meaning |
-| :---: | :--- | :--- |
-| `0` | **Pass** | All checks passed, no SEO invariant regressions detected. |
-| `1` | **Regression** | One or more critical SEO invariants were violated. |
-| `2` | **Config Error** | Invalid command flags or missing configuration. |
-| `3` | **Analyzer Error** | Framework analysis failure or unhandled exception. |
+## 8. Pluggable Provider Layer & Content-Hash Caching
+
+- **Pluggable Providers** (`src/providers/`): Out-of-the-box zero-cost web scrapers with optional API key overrides for Google PageSpeed, DataForSEO, ValueSERP, or Serper.
+- **Cache Provenance** (`src/utils/cacheManager.ts`): All cached responses include explicit provenance headers (`isCached`, `cachedAt`, `ageMs`, `ttlMs`, `provider`, `key`).
 
 ---
 
-## 7. Pluggable Provider Layer & Content-Hash Caching
-
-- **Pluggable Providers** (`src/providers/`): Out-of-the-box native zero-cost web scrapers with optional API key overrides for Google PageSpeed, DataForSEO, ValueSERP, or Serper.
-- **Cache Provenance** (`src/utils/cacheManager.ts`): All cached responses include explicit provenance headers:
-  ```json
-  {
-    "isCached": true,
-    "cachedAt": "2026-08-27T00:00:00.000Z",
-    "ageMs": 420,
-    "ttlMs": 299580,
-    "provider": "typescript_ast",
-    "key": "test_ast:0f30d14bec76b96a"
-  }
-  ```
-
----
-
-## 8. Automated Benchmark Suite & Precision Guarantees
-
-SEO Gravity maintains two mandatory automated benchmark suites:
+## 9. Automated Benchmark Suite & Precision Guarantees
 
 1. **Correlation Accuracy Benchmark** (`src/benchmark/correlationBenchmark.ts`):
-   - Asserts `URL ➔ Discovered Route ➔ Source File Path ➔ AST Node Range` precision.
-   - **Score: 17/17 frameworks passed (100% precision).**
-2. **Invariant Recall & Precision Benchmark** (`src/benchmark/invariantBenchmark.ts`):
-   - Asserts invariant evaluation accuracy and 0 false-positive regression diffs.
-   - **Score: 100% precision.**
+   - **Score: 17/17 frameworks passed (100% precision across 31 routes & 17 source coordinates).**
+2. **Invariant Precision & Policy Benchmark** (`src/benchmark/invariantBenchmark.ts`):
+   - **Score: 100% precision (0 false positives).**
 
 ---
 

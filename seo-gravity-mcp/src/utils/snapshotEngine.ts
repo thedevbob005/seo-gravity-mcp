@@ -446,6 +446,9 @@ export function compareSnapshots(
       status,
       baselineSatisfied: bInv?.satisfied ?? false,
       currentSatisfied: cInv.satisfied,
+      requirementLevel: cInv.requirementLevel || 'REQUIRED',
+      severity: cInv.severity || 'high',
+      evidence: cInv.evidence,
       message: `${cInv.description}: ${status}`
     });
   }

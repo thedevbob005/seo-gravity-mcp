@@ -5,6 +5,7 @@ import { DiscoveredRoute, Finding, ProjectSnapshot } from '../types/findings.js'
 import { getProjectAdapter } from './projectScanner.js';
 import { createProjectSnapshot } from './snapshotEngine.js';
 import { inspectSourceFileAST } from './astLocator.js';
+import { InvariantType } from '../types/canonical.js';
 
 export interface SemanticChangeCategory {
   affectsMetadata: boolean;
@@ -12,6 +13,16 @@ export interface SemanticChangeCategory {
   affectsSchema: boolean;
   affectsLinks: boolean;
   affectsRobotsOrSitemap: boolean;
+  likelyAffectedInvariants: InvariantType[];
+  riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface SemanticSeoDiff {
+  changedFile: string;
+  affectedRoute?: string;
+  sourceRange?: { startLine: number; endLine: number };
+  semanticCategory: SemanticChangeCategory;
+  impactDescription: string;
 }
 
 export interface DifferentialAuditResult {
@@ -23,6 +34,7 @@ export interface DifferentialAuditResult {
   affectedRoutes: DiscoveredRoute[];
   unaffectedRoutesCount: number;
   semanticImpacts: Record<string, SemanticChangeCategory>;
+  semanticDiffs: SemanticSeoDiff[];
   targetedFindings: Finding[];
   regressionDetected: boolean;
   summary: string;
@@ -61,7 +73,9 @@ export function analyzeSemanticFileChange(filePath: string, projectDir: string):
       affectsCanonical: true,
       affectsSchema: true,
       affectsLinks: true,
-      affectsRobotsOrSitemap: true
+      affectsRobotsOrSitemap: true,
+      likelyAffectedInvariants: ['INV-HTTP-200', 'INV-CANONICAL-RESOLVES', 'INV-TITLE-PRESENT'],
+      riskLevel: 'HIGH'
     };
   }
 
@@ -72,19 +86,35 @@ export function analyzeSemanticFileChange(filePath: string, projectDir: string):
       affectsCanonical: false,
       affectsSchema: false,
       affectsLinks: false,
-      affectsRobotsOrSitemap: true
+      affectsRobotsOrSitemap: true,
+      likelyAffectedInvariants: ['INV-ROBOTS-ALLOWED', 'INV-SITEMAP-PRESENT', 'INV-LLMS-TXT'],
+      riskLevel: 'MEDIUM'
     };
   }
 
   const ast = inspectSourceFileAST(fullPath);
   const content = fs.readFileSync(fullPath, 'utf-8');
 
+  const affectsMetadata = ast.hasMetadataExport || ast.hasGenerateMetadata || /<title\b|<meta\s+name|@section\(['"]title/i.test(content);
+  const affectsCanonical = ast.hasCanonicalDeclaration || /rel=["']canonical["']/i.test(content);
+  const affectsSchema = ast.hasSchemaMarkup || /application\/ld\+json/.test(content);
+  const affectsLinks = /<Link\b|<a\b|href=/i.test(content);
+
+  const affectedInvariants: InvariantType[] = ['INV-HTTP-200'];
+  if (affectsMetadata) affectedInvariants.push('INV-TITLE-PRESENT');
+  if (affectsCanonical) affectedInvariants.push('INV-CANONICAL-RESOLVES');
+  if (affectsLinks) affectedInvariants.push('INV-LINK-ACCESSIBLE');
+
+  const riskLevel: 'HIGH' | 'MEDIUM' | 'LOW' = (affectsCanonical || affectsMetadata) ? 'HIGH' : affectsLinks ? 'MEDIUM' : 'LOW';
+
   return {
-    affectsMetadata: ast.hasMetadataExport || ast.hasGenerateMetadata || /<title\b|<meta\s+name/i.test(content),
-    affectsCanonical: ast.hasCanonicalDeclaration || /rel=["']canonical["']/i.test(content),
-    affectsSchema: ast.hasSchemaMarkup || /application\/ld\+json/i.test(content),
-    affectsLinks: /<Link\b|<a\b|href=/i.test(content),
-    affectsRobotsOrSitemap: false
+    affectsMetadata,
+    affectsCanonical,
+    affectsSchema,
+    affectsLinks,
+    affectsRobotsOrSitemap: false,
+    likelyAffectedInvariants: affectedInvariants,
+    riskLevel
   };
 }
 
@@ -127,8 +157,18 @@ export async function runDifferentialAudit(
   const { affected, unaffected } = mapChangedFilesToRoutes(changedFiles, routes);
 
   const semanticImpacts: Record<string, SemanticChangeCategory> = {};
+  const semanticDiffs: SemanticSeoDiff[] = [];
+
   for (const file of changedFiles) {
-    semanticImpacts[file] = analyzeSemanticFileChange(file, resolved);
+    const sem = analyzeSemanticFileChange(file, resolved);
+    semanticImpacts[file] = sem;
+    const matchingRoute = routes.find(r => r.sourceFilePath === file);
+    semanticDiffs.push({
+      changedFile: file,
+      affectedRoute: matchingRoute?.routePath,
+      semanticCategory: sem,
+      impactDescription: `File change triggers risk [${sem.riskLevel}] on invariants: ${sem.likelyAffectedInvariants.join(', ')}`
+    });
   }
 
   const snapshot = await createProjectSnapshot(resolved, { baseUrl });
@@ -147,6 +187,7 @@ export async function runDifferentialAudit(
     affectedRoutes: affected,
     unaffectedRoutesCount: unaffected.length,
     semanticImpacts,
+    semanticDiffs,
     targetedFindings,
     regressionDetected: hasCritical,
     summary: `Differential audit completed: ${changedFiles.length} file(s) changed, ${affected.length} route(s) affected, ${targetedFindings.length} targeted finding(s) detected.`

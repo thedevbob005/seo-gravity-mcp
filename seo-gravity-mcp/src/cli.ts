@@ -5,6 +5,8 @@ import * as fs from 'fs';
 import { auditProject, checkRegression, createSnapshotTool } from './tools/orchestration.js';
 import { runDifferentialAudit } from './utils/gitDiffEngine.js';
 import { exportFindingsToSarif } from './utils/sarifExporter.js';
+import { PolicyLoader } from './policy/loader.js';
+import { formatPrCommentMarkdown } from './utils/prCommentFormatter.js';
 
 export const EXIT_CODES = {
   PASS: 0,
@@ -29,7 +31,10 @@ async function runCli() {
   const baselinePath = getArg('--baseline', '-b');
   const outPath = getArg('--output', '-o');
   const baseRef = getArg('--base-ref') || 'HEAD~1';
+  const policyPath = getArg('--policy');
   const format = (getArg('--format', '-f') || 'pretty').toLowerCase();
+
+  const policy = PolicyLoader.resolvePolicy(projectDir, policyPath);
 
   try {
     switch (command) {
@@ -55,8 +60,9 @@ async function runCli() {
           }
         } else {
           // Pretty format
-          console.log(`\n🚀 SEO Gravity CLI (v1.2.0) — SEO Infrastructure Layer\n`);
+          console.log(`\n🚀 SEO Gravity CLI (v1.3.0) — SEO Engineering Infrastructure\n`);
           console.log(`Auditing project at: ${path.resolve(projectDir)}...`);
+          console.log(`Policy Profile: ${policy.profile}`);
           console.log(`\n========================================`);
           console.log(`Framework: ${result.framework.name} (${result.framework.framework})`);
           console.log(`Overall Health Score: ${result.scores.overallHealth}/100 (Confidence: ${result.scores.overallConfidence})`);
@@ -93,7 +99,7 @@ async function runCli() {
         if (format === 'json') {
           console.log(JSON.stringify(snap.snapshot, null, 2));
         } else {
-          console.log(`\n🚀 SEO Gravity CLI (v1.2.0)\n`);
+          console.log(`\n🚀 SEO Gravity CLI (v1.3.0)\n`);
           console.log(`✅ Snapshot created and saved to: ${snap.savedToPath}`);
           console.log(`Score: ${snap.snapshot.scores.overallHealth}/100 | Invariants: ${snap.snapshot.invariants?.length || 0}`);
         }
@@ -114,12 +120,16 @@ async function runCli() {
           const serialized = JSON.stringify(sarif, null, 2);
           if (outPath) fs.writeFileSync(path.resolve(outPath), serialized, 'utf-8');
           else console.log(serialized);
+        } else if (format === 'pr-comment' || format === 'markdown') {
+          const prMd = formatPrCommentMarkdown(checkRes.regressionReport, policy);
+          if (outPath) fs.writeFileSync(path.resolve(outPath), prMd, 'utf-8');
+          else console.log(prMd);
         } else if (format === 'json') {
           const serialized = JSON.stringify(checkRes, null, 2);
           if (outPath) fs.writeFileSync(path.resolve(outPath), serialized, 'utf-8');
           else console.log(serialized);
         } else {
-          console.log(`\n🚀 SEO Gravity CI Regression Check\n`);
+          console.log(`\n🚀 SEO Gravity CI Regression Check (Policy: ${policy.profile})\n`);
           console.log(checkRes.verdict);
           console.log(`Resolved: ${checkRes.regressionReport.totalResolvedCount} | Regressions: ${checkRes.regressionReport.totalNewRegressionsCount}\n`);
 
@@ -135,14 +145,32 @@ async function runCli() {
         break;
       }
 
-      case 'diff': {
+      case 'diff':
+      case 'review': {
         const diffRes = await runDifferentialAudit(projectDir, baseRef, baseUrl);
 
-        if (format === 'json') {
+        if (format === 'pr-comment' || format === 'markdown') {
+          const fakeReport: any = {
+            verdict: diffRes.regressionDetected ? 'FAILED: Regressions detected on changed routes' : 'PASSED: No regressions detected',
+            newRegressions: diffRes.targetedFindings,
+            resolvedFindings: [],
+            unchangedInvariants: [],
+            scoreDeltas: { overallHealth: 0 }
+          };
+          const prMd = formatPrCommentMarkdown(fakeReport, policy, baseRef);
+          if (outPath) fs.writeFileSync(path.resolve(outPath), prMd, 'utf-8');
+          else console.log(prMd);
+        } else if (format === 'json') {
           console.log(JSON.stringify(diffRes, null, 2));
         } else {
-          console.log(`\n🚀 SEO Gravity Git Differential Audit\n`);
+          console.log(`\n🚀 SEO Gravity Semantic SEO Diff / Code Review\n`);
           console.log(diffRes.summary);
+          if (diffRes.semanticDiffs.length > 0) {
+            console.log(`\nSemantic Diff Details:`);
+            for (const s of diffRes.semanticDiffs) {
+              console.log(`  - [${s.semanticCategory.riskLevel}] ${s.changedFile} -> ${s.impactDescription}`);
+            }
+          }
           if (diffRes.targetedFindings.length > 0) {
             console.log(`\nTargeted Findings on Changed Routes:`);
             for (const f of diffRes.targetedFindings) {
@@ -157,7 +185,7 @@ async function runCli() {
 
       default:
         console.error(`Unknown command: ${command}`);
-        console.error(`Available commands: audit, snapshot, check, diff`);
+        console.error(`Available commands: audit, snapshot, check, diff, review`);
         process.exit(EXIT_CODES.CONFIG_ERROR);
     }
   } catch (err: any) {

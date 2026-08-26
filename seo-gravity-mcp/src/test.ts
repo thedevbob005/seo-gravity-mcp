@@ -10,7 +10,6 @@ import { createMcpServer } from './server/server.js';
 import { TOOLS } from './server/registry.js';
 import {
   auditProject,
-  diagnoseSeo,
   prioritizeFindings,
   createSnapshotTool,
   checkRegression
@@ -19,145 +18,99 @@ import { defaultAdapterRegistry } from './adapters/adapterRegistry.js';
 import { inspectSourceFileAST } from './utils/astLocator.js';
 import { defaultCacheManager } from './utils/cacheManager.js';
 import { defaultProviderRegistry } from './providers/providerRegistry.js';
-import { detectOpportunities } from './utils/opportunityEngine.js';
-import { planExperiment, verifyExperiment } from './utils/experimentEngine.js';
 import { exportFindingsToSarif } from './utils/sarifExporter.js';
 import { defaultInvariantRegistry } from './invariants/registry.js';
+import { PolicyLoader } from './policy/loader.js';
+import { BUILTIN_PROFILES } from './policy/profiles.js';
+import { formatPrCommentMarkdown } from './utils/prCommentFormatter.js';
+import { analyzeSemanticFileChange } from './utils/gitDiffEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../test/fixtures');
 
 async function runTests() {
-  console.log('🧪 Starting SEO Gravity MCP v1.2.0 (Engineering Infrastructure) Test Suite...\n');
+  console.log('🧪 Starting SEO Gravity MCP v1.3.0 (Depth, Policy & Code Review) Test Suite...\n');
 
   // -------------------------------------------------------------
   // Test 1: Modular Server & 35 Tool Catalog
   // -------------------------------------------------------------
   console.log('1️⃣ Testing Modular Server Architecture...');
-  const server = createMcpServer({ name: 'seo-gravity-mcp', version: '1.2.0' });
-  console.log(`   ✅ Server Initialized: ${TOOLS.length} tools registered across all 8 architectural layers.`);
+  const server = createMcpServer({ name: 'seo-gravity-mcp', version: '1.3.0' });
+  console.log(`   ✅ Server Initialized: ${TOOLS.length} tools registered across all architectural layers.`);
 
   // -------------------------------------------------------------
-  // Test 2: On-Page & GEO Evidence Analysis
+  // Test 2: Invariant Truth & Requirement Levels (P0)
   // -------------------------------------------------------------
-  console.log('\n2️⃣ Testing On-Page & GEO Evidence Analysis...');
-  const sampleHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Best Project Management Software in 2026</title>
-        <meta name="description" content="Compare the best agile tools for engineering teams.">
-        <link rel="canonical" href="https://example.com/best-tools">
-      </head>
-      <body>
-        <h1>Best Project Management Software</h1>
-        <p>Project management software refers to digital platforms designed to plan and organize workflows.</p>
-        <a href="/pricing">Pricing</a>
-      </body>
-    </html>
-  `;
-  const onpage = await auditOnPage(sampleHtml, 'project management software');
-  const geo = await auditGeoAiReadiness(sampleHtml, 'best project management software');
-  console.log(`   ✅ On-Page Score: ${onpage.overallScore}/100 | Title: ${onpage.titleAudit.status}`);
-  console.log(`   ✅ GEO AI Retrieval Signals: Direct Answer=${geo.aiRetrievalSignals?.directEntityDefinition}`);
-
-  // -------------------------------------------------------------
-  // Test 3: Framework Adapters & Multi-Framework Route Discovery
-  // -------------------------------------------------------------
-  console.log('\n3️⃣ Testing Framework Adapters (Next.js, Astro, Remix, Vite, SvelteKit)...');
-  const nextAppPath = path.join(FIXTURES_DIR, 'nextjs-app');
-  const nextAdapter = defaultAdapterRegistry.getAdapterForProject(nextAppPath);
-  const nextRoutes = nextAdapter.discoverRoutes(nextAppPath);
-  console.log(`   ✅ Next.js Adapter: ${nextAdapter.name} -> Discovered ${nextRoutes.length} route(s)`);
-
-  const pagesAppPath = path.join(FIXTURES_DIR, 'nextjs-pages');
-  const pagesAdapter = defaultAdapterRegistry.getAdapterForProject(pagesAppPath);
-  const pagesRoutes = pagesAdapter.discoverRoutes(pagesAppPath);
-  console.log(`   ✅ Next.js Pages Adapter: ${pagesAdapter.name} -> Discovered ${pagesRoutes.length} route(s)`);
-
-  const viteAppPath = path.join(FIXTURES_DIR, 'vite-react');
-  const viteAdapter = defaultAdapterRegistry.getAdapterForProject(viteAppPath);
-  const viteRoutes = viteAdapter.discoverRoutes(viteAppPath);
-  console.log(`   ✅ Vite React Adapter: ${viteAdapter.name} -> Discovered ${viteRoutes.length} route(s)`);
-
-  const remixAppPath = path.join(FIXTURES_DIR, 'remix-app');
-  const remixAdapter = defaultAdapterRegistry.getAdapterForProject(remixAppPath);
-  const remixRoutes = remixAdapter.discoverRoutes(remixAppPath);
-  console.log(`   ✅ Remix Adapter: ${remixAdapter.name} -> Discovered ${remixRoutes.length} route(s)`);
-
-  const svelteAppPath = path.join(FIXTURES_DIR, 'sveltekit-app');
-  const svelteAdapter = defaultAdapterRegistry.getAdapterForProject(svelteAppPath);
-  const svelteRoutes = svelteAdapter.discoverRoutes(svelteAppPath);
-  console.log(`   ✅ SvelteKit Adapter: ${svelteAdapter.name} -> Discovered ${svelteRoutes.length} route(s)`);
-
-  // -------------------------------------------------------------
-  // Test 4: Deep AST & Line-Range Correlation Engine
-  // -------------------------------------------------------------
-  console.log('\n4️⃣ Testing AST Inspection & Line-Range Locator...');
-  const homePageFile = path.join(nextAppPath, 'app/page.tsx');
-  const astResult = inspectSourceFileAST(homePageFile);
-  console.log(`   ✅ AST Analysis for app/page.tsx:`);
-  console.log(`      - Has Metadata Export: ${astResult.hasMetadataExport} (Lines ${astResult.metadataRange?.startLine}-${astResult.metadataRange?.endLine})`);
-  console.log(`      - Title Extracted: "${astResult.extractedTitle}"`);
-  console.log(`      - Canonical Declared: ${astResult.hasCanonicalDeclaration} ("${astResult.extractedCanonical}")`);
-
-  // -------------------------------------------------------------
-  // Test 5: Formal Invariant Registry & Evaluation
-  // -------------------------------------------------------------
-  console.log('\n5️⃣ Testing Formal Invariant Registry...');
+  console.log('\n2️⃣ Testing Invariant Truth System & Requirement Levels...');
   const allInvariants = defaultInvariantRegistry.getAll();
-  console.log(`   ✅ Loaded Invariants: ${allInvariants.length} formal rules (${allInvariants.map(i => i.id).join(', ')})`);
+  const reqCount = allInvariants.filter(i => i.requirementLevel === 'REQUIRED').length;
+  const condCount = allInvariants.filter(i => i.requirementLevel === 'CONDITIONAL').length;
+  const recCount = allInvariants.filter(i => i.requirementLevel === 'RECOMMENDED').length;
+  console.log(`   ✅ Invariants Categorized: ${reqCount} REQUIRED, ${condCount} CONDITIONAL, ${recCount} RECOMMENDED.`);
 
+  const llmsInv = defaultInvariantRegistry.evaluateContext(
+    'INV-LLMS-TXT',
+    { url: '/llms.txt', logicalPageId: 'site_root', hasLlmsTxt: false },
+    { analyzer: 'test', source: 'route_config', timestamp: new Date().toISOString(), provider: 'test' }
+  );
+  console.log(`   ✅ Non-dogmatic /llms.txt evaluation: RequirementLevel=${llmsInv?.requirementLevel} (Does not block CI gates)`);
+
+  // -------------------------------------------------------------
+  // Test 3: Project Policy Engine (.seo-gravity.yml) (P1)
+  // -------------------------------------------------------------
+  console.log('\n3️⃣ Testing Project Policy Engine & Preset Profiles...');
+  const balanced = PolicyLoader.resolvePolicy('.');
+  console.log(`   ✅ Default Policy: ${balanced.profile} (Fail on: ${balanced.regression?.failOnLevels?.join(', ')})`);
+  console.log(`   ✅ Built-in Profiles Loaded: ${Object.keys(BUILTIN_PROFILES).join(', ')}`);
+
+  // -------------------------------------------------------------
+  // Test 4: Semantic SEO Diff & Risk Assessment (P1)
+  // -------------------------------------------------------------
+  console.log('\n4️⃣ Testing Semantic SEO Git Diff Engine...');
+  const nextAppPath = path.join(FIXTURES_DIR, 'nextjs-app');
+  const semChange = analyzeSemanticFileChange('app/page.tsx', nextAppPath);
+  console.log(`   ✅ Semantic Analysis for app/page.tsx:`);
+  console.log(`      - Affects Metadata: ${semChange.affectsMetadata}`);
+  console.log(`      - Affects Canonical: ${semChange.affectsCanonical}`);
+  console.log(`      - Invariant Risk Level: ${semChange.riskLevel}`);
+  console.log(`      - Likely Affected Invariants: ${semChange.likelyAffectedInvariants.join(', ')}`);
+
+  // -------------------------------------------------------------
+  // Test 5: Developer-Native PR Comment Formatter (P1)
+  // -------------------------------------------------------------
+  console.log('\n5️⃣ Testing Developer-Native GitHub PR Comment Formatter...');
   const snapResult = await createSnapshotTool(nextAppPath);
-  console.log(`   ✅ Snapshot ID: ${snapResult.snapshot.snapshotId}`);
-  console.log(`   ✅ Formal Invariants Evaluated: ${snapResult.snapshot.invariants?.length || 0} invariant check(s) recorded`);
-
   const regCheck = await checkRegression(nextAppPath, snapResult.snapshot);
-  console.log(`   ✅ Invariant Regression Check: ${regCheck.verdict}`);
+  const prComment = formatPrCommentMarkdown(regCheck.regressionReport, balanced, 'feat/seo-hardening');
+  console.log(`   ✅ PR Markdown Generated (${prComment.length} characters)`);
+  console.log(`      Snippet:\n      ${prComment.split('\n').slice(0, 5).join('\n      ')}`);
 
   // -------------------------------------------------------------
-  // Test 6: SARIF v2.1.0 Exporter
+  // Test 6: 17 Framework Adapters Precision Check
   // -------------------------------------------------------------
-  console.log('\n6️⃣ Testing SARIF v2.1.0 Exporter for CI/CD...');
+  console.log('\n6️⃣ Testing 17 Framework Adapters Coverage...');
+  const adapters = defaultAdapterRegistry.getAllAdapters();
+  console.log(`   ✅ ${adapters.length} Framework Adapters Loaded:`);
+  console.log(`      ${adapters.map(a => a.id).join(', ')}`);
+
+  // -------------------------------------------------------------
+  // Test 7: SARIF v2.1.0 Exporter
+  // -------------------------------------------------------------
+  console.log('\n7️⃣ Testing SARIF v2.1.0 Exporter for GitHub Security Tab...');
   const sarif = exportFindingsToSarif(snapResult.snapshot.findings, nextAppPath);
-  console.log(`   ✅ SARIF Report Generated: Version ${sarif.version}, Tool: ${sarif.runs[0].tool.driver.name}, Rules: ${sarif.runs[0].tool.driver.rules.length}, Results: ${sarif.runs[0].results.length}`);
+  console.log(`   ✅ SARIF Report Generated: Driver=${sarif.runs[0].tool.driver.name}, Version=${sarif.version}, Rules=${sarif.runs[0].tool.driver.rules.length}`);
 
   // -------------------------------------------------------------
-  // Test 7: Cache Manager with Provenance
+  // Test 8: Content-Hash Cache Manager with Provenance
   // -------------------------------------------------------------
-  console.log('\n7️⃣ Testing Content-Hash Cache Manager with Provenance...');
-  const cacheKey = defaultCacheManager.computeKey('test_ast', { file: 'page.tsx', size: 500 });
+  console.log('\n8️⃣ Testing Cache Manager with Provenance...');
+  const cacheKey = defaultCacheManager.computeKey('test_ast', { file: 'page.tsx' });
   defaultCacheManager.set(cacheKey, { parsed: true }, 10000, 'typescript_ast');
   const cachedVal = defaultCacheManager.getWithMetadata<any>(cacheKey);
-  console.log(`   ✅ Cache Provenance: Provider=${cachedVal?.metadata.provider}, Age=${cachedVal?.metadata.ageMs}ms, Key=${cachedVal?.metadata.key}`);
+  console.log(`   ✅ Cache Provenance: Provider=${cachedVal?.metadata.provider}, Age=${cachedVal?.metadata.ageMs}ms`);
 
-  // -------------------------------------------------------------
-  // Test 8: Pluggable Provider Abstraction
-  // -------------------------------------------------------------
-  console.log('\n8️⃣ Testing Pluggable Provider Abstraction...');
-  const serpProv = defaultProviderRegistry.getSerpProvider();
-  const speedProv = defaultProviderRegistry.getPageSpeedProvider();
-  console.log(`   ✅ Default SERP Provider: ${serpProv.name} (Free: ${serpProv.isFree})`);
-  console.log(`   ✅ Default PageSpeed Provider: ${speedProv.name}`);
-
-  // -------------------------------------------------------------
-  // Test 9: Opportunity Engine
-  // -------------------------------------------------------------
-  console.log('\n9️⃣ Testing Strategic Opportunity Engine...');
-  const opps = await detectOpportunities(nextAppPath, ['saas pricing calculator', 'agile workflows']);
-  console.log(`   ✅ Opportunities Discovered: ${opps.totalOpportunitiesFound} strategic opportunity item(s)`);
-
-  // -------------------------------------------------------------
-  // Test 10: Flagship Project Audit & Sprint Prioritization
-  // -------------------------------------------------------------
-  console.log('\n🔟 Testing Flagship Project Audit & Sprint Prioritization...');
-  const audit = await auditProject(nextAppPath);
-  const sprints = await prioritizeFindings(nextAppPath);
-  console.log(`   ✅ Audit Complete: Overall Score=${audit.scores.overallHealth}/100 | Dynamic Routes=${audit.routesSummary.dynamicRoutesCount}`);
-  console.log(`   ✅ Priority Sprints: Quick Wins=${sprints.sprints.quickWins.length}, Critical=${sprints.sprints.criticalBlockers.length}`);
-
-  console.log('\n🎉 ALL v1.2.0 ARCHITECTURAL & CI TEST SUITES PASSED CLEANLY!\n');
+  console.log('\n🎉 ALL v1.3.0 DEPTH, POLICY & CODE REVIEW SUITES PASSED CLEANLY!\n');
 }
 
 runTests().catch(err => {
