@@ -29,7 +29,7 @@ export class UnknownAdapter implements FrameworkAdapter {
       hasLlmsTxt: false,
       rootDir: path.resolve(projectDir),
       routesDir: '.',
-      defaultDevPort: 3000
+      defaultDevPort: undefined
     };
   }
 
