@@ -412,5 +412,19 @@ export interface ContentDecayReport {
   suggestedUpdateChecklist: string[];
 }
 
+export interface PageSpeedAuditReport {
+  url: string;
+  strategy: string;
+  performanceScore: number;
+  coreWebVitals: {
+    lcp: { value: string; status: 'Good' | 'Needs Improvement' | 'Poor' };
+    fcp: { value: string; status: 'Good' | 'Needs Improvement' | 'Poor' };
+    cls: { value: string; status: 'Good' | 'Needs Improvement' | 'Poor' };
+    ttfb: { value: string; status: 'Good' | 'Needs Improvement' | 'Poor' };
+  };
+  topSpeedFixes: string[];
+}
+
 export * from './findings.js';
+
 

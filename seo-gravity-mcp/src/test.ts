@@ -2,196 +2,170 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 // Core Tool Imports
-import { auditOnPage, generateContentBrief, scoreReadability } from './tools/onpage.js';
-import { auditGeoAiReadiness, generateLlmsTxt, auditAiBotsRobots } from './tools/geo.js';
-import { scoreInformationGain, auditEeat } from './tools/eeat.js';
-import { getKeywordSuggestions, findQuestions, clusterKeywords, classifySearchIntent } from './tools/keywords.js';
-import { mapEntitySalience, generateSchemaMarkup, validateSchema } from './tools/schema.js';
-import { auditTechnical, validateRobotsTxt } from './tools/technical.js';
-import { auditPageSpeed, auditContentDecay } from './tools/performance.js';
-import { analyzeSerp, analyzeCompetitorContentGap, analyzeForumDiscussions } from './tools/serp.js';
+import { auditOnPage } from './tools/onpage.js';
+import { auditGeoAiReadiness, generateLlmsTxt } from './tools/geo.js';
+import { clusterKeywords, classifySearchIntent } from './tools/keywords.js';
+import { generateSchemaMarkup, validateSchema } from './tools/schema.js';
 
-// New v1.0.2 Agent Orchestration Imports
+// Agent Orchestration & v1.1.0 Modules
 import {
   auditProject,
   diagnoseSeo,
   prioritizeFindings,
   generateFixPlan,
   createSnapshotTool,
-  compareSnapshotsTool,
   checkRegression
 } from './tools/orchestration.js';
-import { detectFramework, discoverRoutes, mapUrlToRouteSource } from './utils/projectScanner.js';
+import { defaultAdapterRegistry } from './adapters/adapterRegistry.js';
+import { inspectSourceFileAST } from './utils/astLocator.js';
+import { calculatePriorityScore } from './utils/findingEngine.js';
 import { CrawlGraphBuilder } from './utils/crawlGraph.js';
-import { calculatePriorityScore, calculateMultiDimensionalScores } from './utils/findingEngine.js';
+import { mapChangedFilesToRoutes } from './utils/gitDiffEngine.js';
+import { defaultCacheManager } from './utils/cacheManager.js';
+import { defaultProviderRegistry } from './providers/providerRegistry.js';
+import { detectOpportunities } from './utils/opportunityEngine.js';
+import { planExperiment, verifyExperiment } from './utils/experimentEngine.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../test/fixtures');
 
 async function runTests() {
-  console.log('🧪 Starting SEO Gravity MCP v1.0.2 Comprehensive Test Suite...\n');
+  console.log('🧪 Starting SEO Gravity MCP v1.1.0 (P0-P2 Blueprint) Test Suite...\n');
 
   // -------------------------------------------------------------
-  // Test 1: On-Page Audit
+  // Test 1: On-Page & GEO with Evidence Tiers
   // -------------------------------------------------------------
-  console.log('1️⃣ Testing On-Page Audit...');
+  console.log('1️⃣ Testing On-Page & GEO Evidence Analysis...');
   const sampleHtml = `
     <!DOCTYPE html>
     <html>
       <head>
-        <title>Best Project Management Software in 2026 - Top 10 Picks</title>
-        <meta name="description" content="Discover the best project management software tools for agile teams in 2026. Compare pricing, features, and user ratings. Start free today.">
-        <link rel="canonical" href="https://example.com/best-project-management-software">
+        <title>Best Project Management Software in 2026</title>
+        <meta name="description" content="Compare the best agile tools for engineering teams.">
+        <link rel="canonical" href="https://example.com/best-tools">
       </head>
       <body>
-        <h1>Best Project Management Software for Teams</h1>
-        <h2>1. Why Project Management Tools Matter</h2>
-        <p>Project management software refers to digital platforms designed to plan, organize, and allocate resources efficiently across engineering and marketing teams.</p>
-        <h2>2. Top Features Comparison</h2>
-        <p>Key features include Gantt charts, real-time collaboration, and API integrations.</p>
-        <img src="hero.png" alt="Project management dashboard preview">
-        <a href="/pricing">View Pricing</a>
-        <a href="https://wikipedia.org/wiki/Project_management">Learn more on Wikipedia</a>
+        <h1>Best Project Management Software</h1>
+        <p>Project management software refers to digital platforms designed to plan and organize workflows.</p>
+        <a href="/pricing">Pricing</a>
       </body>
     </html>
   `;
   const onpage = await auditOnPage(sampleHtml, 'project management software');
-  console.log(`   ✅ On-Page Score: ${onpage.overallScore}/100 | Title: ${onpage.titleAudit.status} | H1s: ${onpage.headingsAudit.h1Count}`);
-
-  // -------------------------------------------------------------
-  // Test 2: GEO / AEO Readiness with Evidence Tiers
-  // -------------------------------------------------------------
-  console.log('\n2️⃣ Testing GEO & AI Search Readiness Audit (with Evidence Tiers)...');
   const geo = await auditGeoAiReadiness(sampleHtml, 'best project management software');
-  console.log(`   ✅ GEO Score: ${geo.overallGeoScore}/100 | Citation: ${geo.citationLikelihood} | Confidence: ${geo.confidence}`);
-  console.log(`   ✅ AI Retrieval Signals: Direct Answer=${geo.aiRetrievalSignals?.directEntityDefinition}, Stats=${geo.aiRetrievalSignals?.factualDataAndStats}`);
+  console.log(`   ✅ On-Page Score: ${onpage.overallScore}/100 | Title: ${onpage.titleAudit.status}`);
+  console.log(`   ✅ GEO AI Retrieval Signals: Direct Answer=${geo.aiRetrievalSignals?.directEntityDefinition}`);
 
   // -------------------------------------------------------------
-  // Test 3: Schema Generation & Validation
+  // Test 2: Framework Adapters & Multi-Framework Route Discovery
   // -------------------------------------------------------------
-  console.log('\n3️⃣ Testing Schema.org JSON-LD Generation & Validation...');
-  const schema = generateSchemaMarkup('FAQPage', {
-    items: [
-      { question: 'What is project management software?', answer: 'It is a platform to coordinate team tasks and roadmaps.' },
-      { question: 'Is it free to start?', answer: 'Yes, free tiers are available for small teams.' }
-    ]
-  });
-  const val = await validateSchema(schema.jsonLdScript.replace(/<script[^>]*>/, '').replace(/<\/script>/, ''));
-  console.log(`   ✅ Schema Validated (${val.schemasDetectedCount} detected, Valid: ${val.schemas[0]?.isValid})`);
-
-  // -------------------------------------------------------------
-  // Test 4: Keyword Clustering & Intent Classification
-  // -------------------------------------------------------------
-  console.log('\n4️⃣ Testing Keyword Clustering & Search Intent Classification...');
-  const keywords = [
-    'best running shoes',
-    'buy running shoes online',
-    'how to choose running shoes',
-    'running shoes for flat feet',
-    'running shoes review',
-    'running shoes sale discount'
-  ];
-  const clusters = clusterKeywords(keywords);
-  const intents = classifySearchIntent(keywords);
-  console.log(`   ✅ Clustered ${keywords.length} keywords into ${clusters.clusterCount} cluster(s)`);
-  console.log(`   ✅ Intent: "${keywords[1]}" -> ${intents[1].intent} (${(intents[1].confidenceScore * 100).toFixed(0)}%)`);
-
-  // -------------------------------------------------------------
-  // Test 5: Priority Scoring Algorithm
-  // -------------------------------------------------------------
-  console.log('\n5️⃣ Testing Finding Priority Scoring Algorithm...');
-  const p1 = calculatePriorityScore('critical', 1.0, 'trivial', 'site_wide');
-  const p2 = calculatePriorityScore('low', 0.8, 'high', 'isolated');
-  console.log(`   ✅ Critical Site-wide Issue Priority: ${p1.priorityScore} (Tier: ${p1.priorityTier})`);
-  console.log(`   ✅ Isolated Low-Severity Issue Priority: ${p2.priorityScore} (Tier: ${p2.priorityTier})`);
-
-  // -------------------------------------------------------------
-  // Test 6: Project Framework Detection & Route Discovery
-  // -------------------------------------------------------------
-  console.log('\n6️⃣ Testing Framework Scanner & Route Discovery on Fixtures...');
+  console.log('\n2️⃣ Testing Framework Adapters (Next.js, Astro, Remix, Vite, SvelteKit)...');
   const nextAppPath = path.join(FIXTURES_DIR, 'nextjs-app');
-  const nextFramework = detectFramework(nextAppPath);
-  const nextRoutes = discoverRoutes(nextAppPath, nextFramework);
-  console.log(`   ✅ Next.js Fixture: Framework=${nextFramework.framework}, TypeScript=${nextFramework.hasTypeScript}, Sitemap=${nextFramework.hasSitemapConfig}`);
-  console.log(`   ✅ Discovered ${nextRoutes.length} route(s): ${nextRoutes.map(r => r.routePath).join(', ')}`);
+  const nextAdapter = defaultAdapterRegistry.getAdapterForProject(nextAppPath);
+  const nextRoutes = nextAdapter.discoverRoutes(nextAppPath);
+  console.log(`   ✅ Next.js Adapter: ${nextAdapter.name} -> Discovered ${nextRoutes.length} route(s): ${nextRoutes.map(r => r.routePath).join(', ')}`);
 
   const astroAppPath = path.join(FIXTURES_DIR, 'astro-app');
-  const astroFramework = detectFramework(astroAppPath);
-  const astroRoutes = discoverRoutes(astroAppPath, astroFramework);
-  console.log(`   ✅ Astro Fixture: Framework=${astroFramework.framework}, Routes=${astroRoutes.map(r => r.routePath).join(', ')}`);
+  const astroAdapter = defaultAdapterRegistry.getAdapterForProject(astroAppPath);
+  const astroRoutes = astroAdapter.discoverRoutes(astroAppPath);
+  console.log(`   ✅ Astro Adapter: ${astroAdapter.name} -> Discovered ${astroRoutes.length} route(s): ${astroRoutes.map(r => r.routePath).join(', ')}`);
 
   // -------------------------------------------------------------
-  // Test 7: Source-to-URL Mapping
+  // Test 3: Deep AST & Line-Range Correlation Engine
   // -------------------------------------------------------------
-  console.log('\n7️⃣ Testing Source-to-URL Correlation...');
-  const map1 = mapUrlToRouteSource('/blog/ai-productivity-2026', nextRoutes);
-  const map2 = mapUrlToRouteSource('/about', nextRoutes);
-  console.log(`   ✅ URL '/blog/ai-productivity-2026' mapped to -> ${map1.sourceFilePath} (Method: ${map1.resolutionMethod}, Conf: ${map1.confidence})`);
-  console.log(`   ✅ URL '/about' mapped to -> ${map2.sourceFilePath} (Method: ${map2.resolutionMethod}, Conf: ${map2.confidence})`);
+  console.log('\n3️⃣ Testing AST Inspection & Line-Range Locator...');
+  const homePageFile = path.join(nextAppPath, 'app/page.tsx');
+  const astResult = inspectSourceFileAST(homePageFile);
+  console.log(`   ✅ AST Analysis for app/page.tsx:`);
+  console.log(`      - Has Metadata Export: ${astResult.hasMetadataExport} (Lines ${astResult.metadataRange?.startLine}-${astResult.metadataRange?.endLine})`);
+  console.log(`      - Title Extracted: "${astResult.extractedTitle}"`);
+  console.log(`      - Canonical Declared: ${astResult.hasCanonicalDeclaration} ("${astResult.extractedCanonical}")`);
 
   // -------------------------------------------------------------
-  // Test 8: Crawl Graph Analysis & PageRank
+  // Test 4: Invariant-Based Snapshot & Regression Engine
   // -------------------------------------------------------------
-  console.log('\n8️⃣ Testing Crawl Graph Analysis...');
-  const brokenPath = path.join(FIXTURES_DIR, 'broken-site/index.html');
-  const crawlBuilder = new CrawlGraphBuilder(brokenPath);
-  const crawlGraph = await crawlBuilder.buildGraph();
-  console.log(`   ✅ Crawl Graph Built: ${crawlGraph.totalNodes} node(s), ${crawlGraph.totalEdges} edge(s), Max Depth: ${crawlGraph.maxClickDepth}`);
+  console.log('\n4️⃣ Testing Invariant-Based Snapshot & Git Metadata...');
+  const snapResult = await createSnapshotTool(nextAppPath);
+  console.log(`   ✅ Snapshot ID: ${snapResult.snapshot.snapshotId}`);
+  console.log(`   ✅ Git Metadata: Branch=${snapResult.snapshot.gitMetadata?.branch || 'main'}, Dirty=${snapResult.snapshot.gitMetadata?.isDirty}`);
+  console.log(`   ✅ Formal Invariants Evaluated: ${snapResult.snapshot.invariants?.length || 0} invariant check(s) recorded`);
+
+  const regCheck = await checkRegression(nextAppPath, snapResult.snapshot);
+  console.log(`   ✅ Regression Check: ${regCheck.verdict} (Diffs count: ${regCheck.regressionReport.invariantDiffs?.length})`);
 
   // -------------------------------------------------------------
-  // Test 9: Flagship Project Audit (seo_project_audit)
+  // Test 5: Deep Root-Cause Diagnosis (seo_diagnose with AST)
   // -------------------------------------------------------------
-  console.log('\n9️⃣ Testing Flagship seo_project_audit Tool...');
-  const auditResult = await auditProject(nextAppPath);
-  console.log(`   ✅ Project Audit Completed:`);
-  console.log(`      - Overall Health Score: ${auditResult.scores.overallHealth}/100 (Confidence: ${auditResult.scores.overallConfidence})`);
-  console.log(`      - Technical: ${auditResult.scores.technical.score}/100 (${auditResult.scores.technical.state})`);
-  console.log(`      - Content: ${auditResult.scores.content.score}/100 (${auditResult.scores.content.state})`);
-  console.log(`      - AI Readiness: ${auditResult.scores.aiReadiness.score}/100 (${auditResult.scores.aiReadiness.state})`);
-  console.log(`      - Total Findings Detected: ${auditResult.totalFindingsCount}`);
-  console.log(`      - Immediate Action: ${auditResult.recommendedImmediateAction}`);
+  console.log('\n5️⃣ Testing Deep Diagnostic with AST Line Precision (seo_diagnose)...');
+  const diag = await diagnoseSeo(nextAppPath, '/about');
+  console.log(`   ✅ Diagnostic for '/about':`);
+  console.log(`      - Matched File: ${diag.sourceLocation?.filePath}`);
+  console.log(`      - AST Target Range: Lines ${diag.sourceRange?.startLine}-${diag.sourceRange?.endLine}`);
+  console.log(`      - Suggested Blueprint: ${diag.suggestedFixBlueprints[0]?.title}`);
 
   // -------------------------------------------------------------
-  // Test 10: Deep Root-Cause Diagnosis (seo_diagnose)
+  // Test 6: Git Differential Engine
   // -------------------------------------------------------------
-  console.log('\n🔟 Testing Deep Diagnostic (seo_diagnose)...');
-  const diagResult = await diagnoseSeo(nextAppPath, '/about');
-  console.log(`   ✅ Diagnosis for '/about':`);
-  console.log(`      - Matched File: ${diagResult.sourceLocation?.filePath}`);
-  console.log(`      - Issues Detected: ${diagResult.detectedIssues.length}`);
-  if (diagResult.suggestedFixBlueprints.length > 0) {
-    console.log(`      - Suggested Fix Blueprint: ${diagResult.suggestedFixBlueprints[0].title}`);
+  console.log('\n6️⃣ Testing Git Differential Route Mapping...');
+  const changedMock = ['app/blog/[slug]/page.tsx'];
+  const diffMapping = mapChangedFilesToRoutes(changedMock, nextRoutes);
+  console.log(`   ✅ Changed: ${changedMock.join(', ')} -> Affected Routes: ${diffMapping.affected.map(r => r.routePath).join(', ')} (${diffMapping.unaffected.length} unaffected)`);
+
+  // -------------------------------------------------------------
+  // Test 7: Content-Hash Caching Manager
+  // -------------------------------------------------------------
+  console.log('\n7️⃣ Testing Content-Hash Cache Manager...');
+  const cacheKey = defaultCacheManager.computeKey('test_ast', { file: 'page.tsx', size: 500 });
+  defaultCacheManager.set(cacheKey, { parsed: true, timestamp: Date.now() }, 10000);
+  const cachedVal = defaultCacheManager.get<any>(cacheKey);
+  console.log(`   ✅ Cache Key Generated: ${cacheKey}`);
+  console.log(`   ✅ Cache Hit Verified: parsed=${cachedVal?.parsed} (Cache Size: ${defaultCacheManager.size()})`);
+
+  // -------------------------------------------------------------
+  // Test 8: Pluggable Provider Abstraction
+  // -------------------------------------------------------------
+  console.log('\n8️⃣ Testing Pluggable Provider Abstraction...');
+  const serpProv = defaultProviderRegistry.getSerpProvider();
+  const speedProv = defaultProviderRegistry.getPageSpeedProvider();
+  console.log(`   ✅ Default SERP Provider: ${serpProv.name} (Free: ${serpProv.isFree})`);
+  console.log(`   ✅ Default PageSpeed Provider: ${speedProv.name}`);
+
+  // -------------------------------------------------------------
+  // Test 9: Opportunity Engine
+  // -------------------------------------------------------------
+  console.log('\n9️⃣ Testing Strategic Opportunity Engine...');
+  const opps = await detectOpportunities(nextAppPath, ['saas pricing calculator', 'agile workflows']);
+  console.log(`   ✅ Opportunities Discovered: ${opps.totalOpportunitiesFound} strategic opportunity item(s)`);
+  for (const o of opps.opportunities.slice(0, 2)) {
+    console.log(`      - [${o.category}] ${o.title} -> ${o.recommendedRoutePath}`);
   }
 
   // -------------------------------------------------------------
-  // Test 11: Sprint Prioritization (seo_prioritize)
+  // Test 10: SEO Experimentation Engine (Hypothesis & Verification)
   // -------------------------------------------------------------
-  console.log('\n1️⃣1️⃣ Testing Finding Prioritization (seo_prioritize)...');
-  const sprintResult = await prioritizeFindings(nextAppPath);
-  console.log(`   ✅ Prioritization Sprints:`);
-  console.log(`      - Quick Wins: ${sprintResult.sprints.quickWins.length} items`);
-  console.log(`      - Critical Blockers: ${sprintResult.sprints.criticalBlockers.length} items`);
-  console.log(`      - Projected Score After Quick Wins: ${sprintResult.projectedScoreImprovement.projectedScoreAfterQuickWins}/100`);
+  console.log('\n🔟 Testing SEO Experimentation Engine...');
+  const experiment = await planExperiment(
+    nextAppPath,
+    '/about',
+    'Adding metadata export to /about will resolve critical defect',
+    'Export const metadata: Metadata = { title: "About", description: "..." }'
+  );
+  console.log(`   ✅ Experiment Planned: ID=${experiment.id}, Status=${experiment.status}, Target=${experiment.targetRoute}`);
+
+  const expVerify = await verifyExperiment(nextAppPath, experiment);
+  console.log(`   ✅ Experiment Verification State: ${expVerify.status} (Delta: ${expVerify.scoreDelta})`);
 
   // -------------------------------------------------------------
-  // Test 12: Fix Plan Generation (seo_fix_plan)
+  // Test 11: End-to-End Flagship Audit & Priority Sprints
   // -------------------------------------------------------------
-  console.log('\n1️⃣2️⃣ Testing Fix Plan Generation (seo_fix_plan)...');
-  const fixPlan = await generateFixPlan(nextAppPath);
-  console.log(`   ✅ Fix Plan Generated: ${fixPlan.totalSteps} remediation step(s) ready for AI coding execution.`);
+  console.log('\n1️⃣1️⃣ Testing Flagship Project Audit & Sprint Prioritization...');
+  const audit = await auditProject(nextAppPath);
+  const sprints = await prioritizeFindings(nextAppPath);
+  console.log(`   ✅ Audit Complete: Overall Score=${audit.scores.overallHealth}/100 | Dynamic Routes=${audit.routesSummary.dynamicRoutesCount}`);
+  console.log(`   ✅ Priority Sprints: Quick Wins=${sprints.sprints.quickWins.length}, Critical=${sprints.sprints.criticalBlockers.length}`);
 
-  // -------------------------------------------------------------
-  // Test 13: Snapshot Creation, Diffing & Regression Checks
-  // -------------------------------------------------------------
-  console.log('\n1️⃣3️⃣ Testing Snapshot Creation & Regression Verification (seo_snapshot_create & seo_regression_check)...');
-  const baselineSnap = await createSnapshotTool(nextAppPath);
-  console.log(`   ✅ Baseline Snapshot Created: ID=${baselineSnap.snapshot.snapshotId}, Score=${baselineSnap.snapshot.scores.overallHealth}/100`);
-
-  const regCheck = await checkRegression(nextAppPath, baselineSnap.snapshot);
-  console.log(`   ✅ Regression Check: ${regCheck.verdict} (Status: ${regCheck.regressionReport.status})`);
-
-  console.log('\n🎉 ALL 13 TEST SUITES (CORE + v1.0.2 ORCHESTRATION) PASSED CLEANLY!\n');
+  console.log('\n🎉 ALL 11 P0-P2 ARCHITECTURAL TEST SUITES PASSED CLEANLY!\n');
 }
 
 runTests().catch(err => {

@@ -10,7 +10,8 @@ import {
   SuggestedFix,
   MultiDimensionalScores,
   ScoreDimension,
-  SupportedFramework
+  SupportedFramework,
+  ASTSourceRange
 } from '../types/findings.js';
 
 export interface CreateFindingParams {
@@ -23,6 +24,7 @@ export interface CreateFindingParams {
   evidence: string;
   affectedUrl: string;
   sourceLocation?: SourceLocation;
+  sourceRange?: ASTSourceRange;
   likelyRootCause?: string;
   recommendation: string;
   suggestedFix?: SuggestedFix;
@@ -118,6 +120,7 @@ export function createFinding(params: CreateFindingParams): Finding {
     evidence: params.evidence,
     affectedUrl: params.affectedUrl,
     sourceLocation: params.sourceLocation,
+    sourceRange: params.sourceRange,
     likelyRootCause: params.likelyRootCause,
     recommendation: params.recommendation,
     suggestedFix: params.suggestedFix,

@@ -9,16 +9,15 @@ import {
   Finding,
   FindingCategory
 } from '../types/findings.js';
-import { detectFramework, discoverRoutes, mapUrlToRouteSource } from '../utils/projectScanner.js';
+import { getProjectAdapter, discoverRoutes, mapUrlToRouteSource } from '../utils/projectScanner.js';
 import {
   createProjectSnapshot,
   compareSnapshots
 } from '../utils/snapshotEngine.js';
 import {
-  generateCodeFixSnippet,
   calculateMultiDimensionalScores
 } from '../utils/findingEngine.js';
-import { fetchAndParsePage } from '../utils/scraper.js';
+import { inspectSourceFileAST } from '../utils/astLocator.js';
 
 export async function auditProject(
   projectPath: string,
@@ -45,7 +44,6 @@ export async function auditProject(
     findingsByCategory[f.category] = (findingsByCategory[f.category] || 0) + 1;
   }
 
-  // Sort by priorityScore descending
   const sortedFindings = [...snapshot.findings].sort((a, b) => b.priorityScore - a.priorityScore);
 
   const missingMetaCount = snapshot.discoveredRoutes.filter(
@@ -66,6 +64,7 @@ export async function auditProject(
     schemaVersion: 'seo.gravity/v1',
     projectPath: snapshot.projectPath,
     scannedAt: snapshot.createdAt,
+    gitMetadata: snapshot.gitMetadata,
     framework: snapshot.frameworkInfo,
     routesSummary: {
       totalDiscovered: snapshot.discoveredRoutes.length,
@@ -97,9 +96,10 @@ export async function diagnoseSeo(
   focusIssueId?: string
 ): Promise<DiagnosticResult> {
   const resolvedPath = path.resolve(projectPath);
-  const frameworkInfo = detectFramework(resolvedPath);
-  const discoveredRoutes = discoverRoutes(resolvedPath, frameworkInfo);
-  const mapping = mapUrlToRouteSource(targetUrlOrFile, discoveredRoutes);
+  const adapter = getProjectAdapter(resolvedPath);
+  const frameworkInfo = adapter.getProjectInfo(resolvedPath);
+  const discoveredRoutes = adapter.discoverRoutes(resolvedPath);
+  const mapping = adapter.mapRouteToSource(targetUrlOrFile, discoveredRoutes);
 
   let sourceFile = mapping.sourceFilePath;
   if (!sourceFile && fs.existsSync(path.join(resolvedPath, targetUrlOrFile))) {
@@ -110,23 +110,19 @@ export async function diagnoseSeo(
   const rootCauses: DiagnosticResult['likelyRootCauses'] = [];
   const fixBlueprints: DiagnosticResult['suggestedFixBlueprints'] = [];
 
+  let ast: any = null;
   let fileContent = '';
   if (sourceFile) {
-    try {
-      fileContent = fs.readFileSync(path.join(resolvedPath, sourceFile), 'utf-8');
-    } catch {
-      // File read failed
+    const absPath = path.join(resolvedPath, sourceFile);
+    if (fs.existsSync(absPath)) {
+      fileContent = fs.readFileSync(absPath, 'utf-8');
+      ast = inspectSourceFileAST(absPath);
     }
   }
 
   // Next.js App Router diagnostics
-  if (frameworkInfo.framework === 'nextjs-app-router' && sourceFile) {
-    const hasMeta = /export\s+const\s+metadata\b/.test(fileContent);
-    const hasGenMeta = /export\s+(async\s+)?function\s+generateMetadata\b/.test(fileContent);
-    const hasCanonical = /canonical/.test(fileContent);
-    const hasSchema = /application\/ld\+json/.test(fileContent);
-
-    if (!hasMeta && !hasGenMeta) {
+  if (frameworkInfo.framework === 'nextjs-app-router' && sourceFile && ast) {
+    if (!ast.hasMetadataExport && !ast.hasGenerateMetadata) {
       const issueId = 'SEO-METATAG-001';
       detectedIssues.push({
         id: issueId,
@@ -137,7 +133,8 @@ export async function diagnoseSeo(
         evidenceType: 'observed',
         evidence: `File '${sourceFile}' contains no 'metadata' or 'generateMetadata' export.`,
         affectedUrl: targetUrlOrFile,
-        sourceLocation: { filePath: sourceFile, line: 1 },
+        sourceLocation: { filePath: sourceFile, line: 1, startLine: 1, endLine: 1 },
+        sourceRange: { filePath: sourceFile, startLine: 1, endLine: 1, astNodeType: 'SourceFile' },
         likelyRootCause: 'Next.js App Router relies on explicit metadata exports to generate <title> and <meta> tags.',
         recommendation: 'Export a Metadata object or dynamic generateMetadata function.',
         expectedImpact: 'Generates proper search snippet title and description.',
@@ -155,6 +152,7 @@ export async function diagnoseSeo(
         issueId,
         description: 'Missing Next.js metadata export in page component.',
         sourceCodeSnippet: fileContent.slice(0, 150),
+        sourceRange: { filePath: sourceFile, startLine: 1, endLine: 1 },
         whyItOccurs: 'Without metadata export, Next.js falls back to empty root title, causing generic SERP snippets.'
       });
 
@@ -162,13 +160,14 @@ export async function diagnoseSeo(
         issueId,
         title: 'Add static metadata export',
         targetFile: sourceFile,
+        sourceRange: { filePath: sourceFile, startLine: 1, endLine: 1 },
         actionType: 'modify_file',
         codeToInsertOrReplace: `import type { Metadata } from 'next';\n\nexport const metadata: Metadata = {\n  title: 'Descriptive Page Title | Brand',\n  description: 'High-converting search meta description under 155 characters.',\n};\n`,
         verificationInstructions: 'Run `npm run build` to ensure type-check passes, then curl page and inspect <head>.'
       });
     }
 
-    if (!hasCanonical) {
+    if (!ast.hasCanonicalDeclaration) {
       const issueId = 'SEO-CANONICAL-001';
       detectedIssues.push({
         id: issueId,
@@ -179,7 +178,8 @@ export async function diagnoseSeo(
         evidenceType: 'observed',
         evidence: `File '${sourceFile}' does not declare alternates.canonical.`,
         affectedUrl: targetUrlOrFile,
-        sourceLocation: { filePath: sourceFile },
+        sourceLocation: { filePath: sourceFile, line: 1 },
+        sourceRange: ast.canonicalRange || { filePath: sourceFile, startLine: 1, endLine: 1 },
         likelyRootCause: 'Page does not declare its canonical master URL, risking duplicate content indexation.',
         recommendation: 'Add alternates.canonical to page metadata.',
         expectedImpact: 'Consolidates ranking signals onto the primary URL.',
@@ -197,6 +197,7 @@ export async function diagnoseSeo(
         issueId,
         title: 'Add canonical tag to metadata',
         targetFile: sourceFile,
+        sourceRange: ast.metadataRange,
         actionType: 'modify_file',
         codeToInsertOrReplace: `alternates: {\n  canonical: 'https://yourdomain.com${mapping.matchedRoute?.routePath || ''}',\n},`,
         verificationInstructions: 'Verify <link rel="canonical"> in server response.'
@@ -209,6 +210,7 @@ export async function diagnoseSeo(
     targetUrlOrFile,
     matchedRoute: mapping.matchedRoute,
     sourceLocation: sourceFile ? { filePath: sourceFile, line: 1 } : undefined,
+    sourceRange: ast?.metadataRange || (sourceFile ? { filePath: sourceFile, startLine: 1, endLine: 1 } : undefined),
     detectedIssues,
     likelyRootCauses: rootCauses,
     suggestedFixBlueprints: fixBlueprints
@@ -245,7 +247,6 @@ export async function prioritizeFindings(
     }
   }
 
-  // Sort each sprint by priorityScore descending
   quickWins.sort((a, b) => b.priorityScore - a.priorityScore);
   criticalBlockers.sort((a, b) => b.priorityScore - a.priorityScore);
   architecturalImprovements.sort((a, b) => b.priorityScore - a.priorityScore);
@@ -254,7 +255,6 @@ export async function prioritizeFindings(
   const initialScores = calculateMultiDimensionalScores(findingsList);
   const currentScore = initialScores.overallHealth;
 
-  // Estimate post quick-wins score
   const remainingAfterQuickWins = findingsList.filter(f => !quickWins.includes(f));
   const scoreAfterQuickWins = calculateMultiDimensionalScores(remainingAfterQuickWins).overallHealth;
 

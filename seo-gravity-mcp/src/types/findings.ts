@@ -1,3 +1,15 @@
+import {
+  Provenance,
+  Observation,
+  ASTSourceRange,
+  PageIdentity,
+  SEOInvariant,
+  InvariantDiffItem,
+  GitMetadata
+} from './canonical.js';
+
+export * from './canonical.js';
+
 export type FindingCategory =
   | 'technical'
   | 'content'
@@ -26,6 +38,8 @@ export interface SourceLocation {
   filePath: string;
   line?: number;
   column?: number;
+  startLine?: number;
+  endLine?: number;
   exportName?: string;
   componentName?: string;
   snippet?: string;
@@ -37,18 +51,25 @@ export interface SuggestedFix {
   explanation: string;
   snippet?: string;
   diffPreview?: string;
+  startLine?: number;
+  endLine?: number;
 }
 
 export interface Finding {
   id: string; // e.g. "SEO-CANONICAL-001"
+  ruleId?: string;
   category: FindingCategory;
   title: string;
   severity: SeverityLevel;
   confidence: number; // 0.0 to 1.0
   evidenceType: EvidenceType;
   evidence: string;
+  observations?: Observation[];
+  provenance?: Provenance;
   affectedUrl: string;
+  logicalPageId?: string;
   sourceLocation?: SourceLocation;
+  sourceRange?: ASTSourceRange;
   likelyRootCause?: string;
   recommendation: string;
   suggestedFix?: SuggestedFix;
@@ -122,18 +143,21 @@ export interface DiscoveredRoute {
   hasSchemaMarkup: boolean;
   hasHeadComponent: boolean;
   isClientComponent: boolean;
+  astSourceRange?: ASTSourceRange;
 }
 
 export interface RouteSourceMapping {
   urlPath: string;
   matchedRoute?: DiscoveredRoute;
   sourceFilePath?: string;
+  sourceRange?: ASTSourceRange;
   confidence: number; // 0.0 to 1.0
   resolutionMethod: 'exact_match' | 'pattern_match' | 'fallback_heuristic' | 'unmapped';
 }
 
 export interface CrawlGraphNode {
   url: string;
+  logicalPageId?: string;
   routePath?: string;
   title: string;
   statusCode: number;
@@ -171,10 +195,13 @@ export interface ProjectSnapshot {
   snapshotId: string;
   createdAt: string;
   projectPath: string;
+  gitMetadata?: GitMetadata;
   frameworkInfo: ProjectFrameworkInfo;
   discoveredRoutes: DiscoveredRoute[];
   scores: MultiDimensionalScores;
   findings: Finding[];
+  observations?: Observation[];
+  invariants?: SEOInvariant[];
   crawlGraph?: CrawlGraphSummary;
   routeMappings: RouteSourceMapping[];
 }
@@ -198,6 +225,7 @@ export interface RegressionReport {
   resolvedFindings: Finding[];
   newRegressions: Finding[];
   unresolvedFindings: Finding[];
+  invariantDiffs?: InvariantDiffItem[];
   totalResolvedCount: number;
   totalNewRegressionsCount: number;
   alerts: string[];
@@ -207,6 +235,7 @@ export interface ProjectAuditResult {
   schemaVersion: 'seo.gravity/v1';
   projectPath: string;
   scannedAt: string;
+  gitMetadata?: GitMetadata;
   framework: ProjectFrameworkInfo;
   routesSummary: {
     totalDiscovered: number;
@@ -232,17 +261,20 @@ export interface DiagnosticResult {
   targetUrlOrFile: string;
   matchedRoute?: DiscoveredRoute;
   sourceLocation?: SourceLocation;
+  sourceRange?: ASTSourceRange;
   detectedIssues: Finding[];
   likelyRootCauses: Array<{
     issueId: string;
     description: string;
     sourceCodeSnippet?: string;
+    sourceRange?: ASTSourceRange;
     whyItOccurs: string;
   }>;
   suggestedFixBlueprints: Array<{
     issueId: string;
     title: string;
     targetFile: string;
+    sourceRange?: ASTSourceRange;
     actionType: 'modify_file' | 'create_file' | 'config_update';
     codeToInsertOrReplace: string;
     verificationInstructions: string;
