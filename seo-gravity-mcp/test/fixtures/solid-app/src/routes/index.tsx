@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Title, Meta, Link } from '@solidjs/meta';
 
 export default function Home() {

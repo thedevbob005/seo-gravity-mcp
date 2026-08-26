@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const meta = () => [
   { title: 'Remix Features & Modules' }
 ];

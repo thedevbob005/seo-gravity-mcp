@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Missing canonical alternates and schema markup intentionally for test fixture
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   return (
