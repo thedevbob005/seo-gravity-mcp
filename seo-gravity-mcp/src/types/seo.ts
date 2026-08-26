@@ -102,6 +102,20 @@ export interface GeoAiReadinessReport {
   targetQuery: string;
   overallGeoScore: number; // 0 - 100
   citationLikelihood: 'High' | 'Medium' | 'Low';
+  confidence?: 'High' | 'Medium' | 'Low';
+  aiRetrievalSignals?: {
+    directEntityDefinition: boolean;
+    selfContainedAnswerBlocks: boolean;
+    modularSemanticHeadings: boolean;
+    factualDataAndStats: boolean;
+    structuredListsOrTables: boolean;
+  };
+  evidenceTypeSummary?: {
+    observed: string[];
+    derived: string[];
+    heuristic: string[];
+    predictive: string[];
+  };
   checks: {
     directAnswerParagraph: {
       passed: boolean;
@@ -397,3 +411,6 @@ export interface ContentDecayReport {
   brokenOutboundLinks: string[];
   suggestedUpdateChecklist: string[];
 }
+
+export * from './findings.js';
+

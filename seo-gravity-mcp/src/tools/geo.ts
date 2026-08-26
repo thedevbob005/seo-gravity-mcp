@@ -50,13 +50,52 @@ export async function auditGeoAiReadiness(
   const totalScore = directAnswerScore + chunkingScore + structuredScore + statsScore + entityScore;
   const citationLikelihood: GeoAiReadinessReport['citationLikelihood'] =
     totalScore >= 75 ? 'High' : totalScore >= 50 ? 'Medium' : 'Low';
+  const confidence: GeoAiReadinessReport['confidence'] =
+    content.length > 300 ? 'High' : content.length > 100 ? 'Medium' : 'Low';
 
   const firstSentence = content.split(/[.!?]+/)[0] || '';
+
+  const aiRetrievalSignals = {
+    directEntityDefinition: directAnswerPassed,
+    selfContainedAnswerBlocks: semanticChunkingPassed,
+    modularSemanticHeadings: hasHeadings,
+    factualDataAndStats: statsMatches.length >= 2,
+    structuredListsOrTables: structuredDataPassed
+  };
+
+  const evidenceTypeSummary = {
+    observed: [
+      `Heading tags present: ${hasHeadings}`,
+      `Bullet list items found: ${listItemsCount}`,
+      `Data tables detected: ${tablesCount}`,
+      `Numerical statistics/percentages found: ${statsMatches.length}`
+    ],
+    derived: [
+      directAnswerPassed
+        ? 'Target query defined directly in opening section.'
+        : 'Target query definition missing from opening paragraph.',
+      semanticChunkingPassed
+        ? 'Content is structured for autonomous LLM extraction.'
+        : 'Content may be difficult for LLMs to segment into discrete facts.'
+    ],
+    heuristic: [
+      `Entity coverage score: ${entityScore}/15 based on query keyword presence.`,
+      `Estimated citation probability: ${citationLikelihood} based on multi-signal retrieval weights.`
+    ],
+    predictive: [
+      citationLikelihood === 'High'
+        ? 'High likelihood of inclusion in Google AI Overviews and Perplexity synthesis.'
+        : 'Low to moderate probability of direct LLM citation without structured definition addition.'
+    ]
+  };
 
   return {
     targetQuery,
     overallGeoScore: totalScore,
     citationLikelihood,
+    confidence,
+    aiRetrievalSignals,
+    evidenceTypeSummary,
     checks: {
       directAnswerParagraph: {
         passed: directAnswerPassed,

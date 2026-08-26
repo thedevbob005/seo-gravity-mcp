@@ -1,66 +1,69 @@
 ---
 name: seo-mastery
 description: >-
-  Expert SEO & Generative Engine Optimization (GEO) strategist and technical auditor.
-  Use when analyzing competitor search rankings, optimizing on-page content, reverse-engineering
-  SERPs, writing data-backed content briefs, auditing JavaScript SEO hydration, mapping entities,
+  Expert SEO & Generative Engine Optimization (GEO) strategist, code correlator, and technical remediation engine.
+  Use when discovering project routes, diagnosing root-cause SEO issues in code (Next.js, Astro, Vite, Remix),
+  ranking findings by (Impact x Reach)/Effort, executing code fixes, verifying regression diffs, mapping entities,
   generating Schema.org JSON-LD, or optimizing for AI Overviews & Perplexity.
 ---
 
-# 🚀 SEO & GEO Mastery Guide for Antigravity
+# 🚀 SEO & GEO Mastery Guide for Antigravity (v1.0.2)
 
-This skill teaches the agent how to autonomously orchestrate the **SEO Gravity MCP** tool suite (28 tools across 8 pillars) to achieve dominant search engine and AI search engine visibility.
-
----
-
-## 🎯 Core Autonomous Workflows
-
-### 1. Competitor Reverse-Engineering & Content Gap Analysis
-When tasked with researching a keyword or outranking competitors:
-1. Call `seo_serp_analyze` with the target query to retrieve the current top 10 organic ranking URLs, People Also Ask (PAA) questions, and SERP features.
-2. Call `seo_forum_discussions_pulse` to understand real-world user complaints and opinions from Reddit/Quora ranking threads.
-3. Call `seo_competitor_content_gap` comparing the user's page (or draft text) against the top 3 competitor URLs to extract:
-   - Missing TF-IDF entities and high-salience terms.
-   - Subtopic and heading gaps (H2/H3s).
-   - Word count and content depth deltas.
-4. Call `seo_competitor_diff` to run a 25-factor side-by-side benchmark against the #1 competitor.
-
-### 2. GEO (Generative Engine Optimization) & AI Overview Optimization
-To ensure the website is cited by Google AI Overviews, Perplexity.ai, and ChatGPT Search:
-1. Call `seo_geo_ai_readiness_audit` on the target page/draft.
-2. Ensure the first 100 words include a clear, bold definition answering the core search intent.
-3. Add structured bullet points and comparison tables for LLM digestion.
-4. Call `seo_llms_txt_generate` to build `/llms.txt` and `/llms-full.txt` files for AI search bots.
-5. Verify `seo_ai_bots_robots_audit` to ensure `GPTBot`, `ClaudeBot`, and `PerplexityBot` are allowed.
-
-### 3. Information Gain & E-E-A-T Fortification
-To avoid Google's helpful content / AI rehash penalties:
-1. Call `seo_information_gain_score` to verify that the page introduces unique statistics, case studies, or first-hand experience not present in top 10 SERPs.
-2. Call `seo_eeat_audit` to check:
-   - Schema `Person` author markup with `sameAs` LinkedIn/Wikidata references.
-   - Fact-checking disclaimers and visible `dateModified` timestamps.
-
-### 4. Technical SEO & JavaScript Hydration Health Check
-1. Call `seo_technical_audit` to check status codes, canonicals, meta robots (`noindex` leaks), and SSL.
-2. Call `seo_js_rendering_diff` on Next.js/React/Vite apps to compare initial server HTML against the hydrated DOM and identify JS-dependent links or flash-of-unstyled-meta.
-3. Call `seo_robots_txt_validate` and `seo_sitemap_inspect` to verify crawler accessibility.
-
-### 5. Schema.org Markup Generation & Validation
-1. Call `seo_entity_salience_map` to extract named entities and Subject-Predicate-Object (SPO) relationship triples.
-2. Call `seo_schema_generate` with the appropriate type (`Article`, `FAQPage`, `Product`, `LocalBusiness`, `BreadcrumbList`).
-3. Validate the output with `seo_schema_validate` before injecting into the application.
+This skill teaches the agent how to autonomously orchestrate the **SEO Gravity MCP** engine (35 tools across 9 operational layers) to understand, audit, fix, and continuously verify website SEO with **zero regressions**.
 
 ---
 
-## 🛠️ Tool Quick Reference (28 Tools)
+## 🎯 The 5-Stage Autonomous Remediation Loop
 
-| Pillar | Tools |
+```text
+ ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+ │ 1. DISCOVER  │ ──▶ │  2. OBSERVE  │ ──▶ │ 3. DIAGNOSE  │ ──▶ │    4. FIX    │ ──▶ │  5. VERIFY   │
+ │ Framework    │     │ Live/Dev SSR │     │ Root Causes  │     │ AI Modifies  │     │ Re-crawl &   │
+ │ Routes       │     │ SERP & Comp. │     │ Prioritized  │     │ Source Code  │     │ Regression   │
+ │ Source Map   │     │ Crawl Graph  │     │ Action Plan  │     │ Components   │     │ Diff Check   │
+ └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
+```
+
+### Stage 1: Discover & Project Inspection
+When tasked with evaluating or optimizing a project codebase:
+1. Call `seo_project_audit` with `project_path` (e.g. `.` or `d:/aide/my-app`) and optional `base_url` (`http://localhost:3000`).
+2. Inspect discovered routes, framework architecture (Next.js App/Pages router, Astro, Vite, Remix, SvelteKit), and initial multidimensional health scores.
+3. Call `seo_snapshot_create` to record a baseline snapshot before making code changes.
+
+### Stage 2: Observe Live & Competitor Signals
+1. For live or local server verification, call `seo_js_rendering_diff` to detect client-only content or flash-of-unstyled-meta.
+2. Call `seo_serp_analyze` and `seo_competitor_content_gap` to retrieve top-ranking competitor entities and heading coverage gaps.
+3. Call `seo_forum_discussions_pulse` to pull real-world user intent and Reddit/Quora search sentiments.
+
+### Stage 3: Diagnose & Prioritize
+1. Call `seo_diagnose` on high-priority routes (e.g. `/blog/[slug]`) to correlate observed issues with exact source files and line numbers.
+2. Call `seo_prioritize` to group findings into **Quick Wins** (low effort, high impact), **Critical Blockers**, and **Architectural Improvements**.
+3. Call `seo_fix_plan` to generate a structured implementation blueprint with code snippets.
+
+### Stage 4: Code Remediation
+1. Apply the suggested code snippets to target source files (e.g. adding `generateMetadata()` or `alternates.canonical` in Next.js, or JSON-LD schema components).
+2. Generate `/llms.txt` using `seo_llms_txt_generate` if missing.
+3. Verify robots directives using `seo_ai_bots_robots_audit` to ensure AI crawlers (`GPTBot`, `ClaudeBot`, `PerplexityBot`) are permitted.
+
+### Stage 5: Verification & Regression Gate
+1. Re-run `seo_regression_check` against the baseline snapshot.
+2. Verify that:
+   - `status` is `IMPROVEMENTS_ONLY` or `NO_REGRESSION`.
+   - `newRegressions` is empty.
+   - Multidimensional health scores have improved.
+
+---
+
+## 🛠️ Tool Quick Reference (35 Tools)
+
+| Operational Layer | Tools |
 | :--- | :--- |
+| **0. Agent Orchestration & Remediation** | `seo_project_audit`, `seo_diagnose`, `seo_prioritize`, `seo_fix_plan`, `seo_snapshot_create`, `seo_snapshot_compare`, `seo_regression_check` |
 | **1. Competitor & SERP** | `seo_serp_analyze`, `seo_competitor_content_gap`, `seo_competitor_profile`, `seo_competitor_diff`, `seo_forum_discussions_pulse` |
-| **2. GEO & AI Search** | `seo_geo_ai_readiness_audit`, `seo_llms_txt_generate`, `seo_ai_bots_robots_audit` |
+| **2. GEO & AI Search (AEO)** | `seo_geo_ai_readiness_audit`, `seo_llms_txt_generate`, `seo_ai_bots_robots_audit` |
 | **3. Info Gain & E-E-A-T** | `seo_information_gain_score`, `seo_eeat_audit` |
 | **4. On-Page Content** | `seo_onpage_audit`, `seo_content_brief_generate`, `seo_readability_score` |
 | **5. Technical & JS SEO** | `seo_technical_audit`, `seo_js_rendering_diff`, `seo_robots_txt_validate`, `seo_sitemap_inspect`, `seo_internal_links_analyze` |
 | **6. Keywords & Intent** | `seo_keyword_suggestions`, `seo_questions_find`, `seo_keyword_cluster`, `seo_search_intent_classify` |
 | **7. Entity & Schema** | `seo_entity_salience_map`, `seo_schema_generate`, `seo_schema_validate` |
-| **8. Speed & Maintenance**| `seo_pagespeed_audit`, `seo_indexnow_submit`, `seo_content_decay_audit` |
+| **8. Speed & Maintenance** | `seo_pagespeed_audit`, `seo_indexnow_submit`, `seo_content_decay_audit` |

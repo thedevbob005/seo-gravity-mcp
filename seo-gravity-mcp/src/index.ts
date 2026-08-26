@@ -61,9 +61,113 @@ import {
   auditContentDecay
 } from './tools/performance.js';
 
-// Define the 28 MCP Tools
+import {
+  auditProject,
+  diagnoseSeo,
+  prioritizeFindings,
+  generateFixPlan,
+  createSnapshotTool,
+  compareSnapshotsTool,
+  checkRegression
+} from './tools/orchestration.js';
+
+// Define the 35 MCP Tools
 const TOOLS: Tool[] = [
-  // 1. SERP & Competitor Intelligence
+  // ==========================================
+  // Layer 0. Agent Orchestration & Remediation
+  // ==========================================
+  {
+    name: 'seo_project_audit',
+    description: 'Flagship project audit: scans codebase for framework (Next.js, Astro, Vite, Remix), maps discovered routes to source files, builds crawl graph, and computes multidimensional SEO scores (Technical, Content, AI Readiness, Discoverability, Entity).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_path: { type: 'string', description: 'Absolute or relative path to project workspace root' },
+        base_url: { type: 'string', description: 'Optional live or dev server URL (e.g. "http://localhost:3000")' },
+        crawl_depth: { type: 'number', description: 'Crawl depth for internal link graph analysis (default 2)' }
+      },
+      required: ['project_path']
+    }
+  },
+  {
+    name: 'seo_diagnose',
+    description: 'Deep root-cause diagnostic: correlates an observed SEO issue or URL back to specific source code files, components, and line numbers with actionable code fix blueprints.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_path: { type: 'string', description: 'Path to project workspace root' },
+        target_url_or_file: { type: 'string', description: 'URL, route path (e.g. "/blog/[slug]"), or file path to diagnose' },
+        focus_issue_id: { type: 'string', description: 'Optional specific finding ID (e.g. "SEO-CANONICAL-001")' }
+      },
+      required: ['project_path', 'target_url_or_file']
+    }
+  },
+  {
+    name: 'seo_prioritize',
+    description: 'Ranks and groups project SEO findings into actionable sprints (Quick Wins, Critical Blockers, Architectural Improvements) using the (Impact × Confidence × Reach) / Effort formula.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_path: { type: 'string', description: 'Project path or raw findings array' },
+        max_count: { type: 'number', description: 'Max items per sprint category (default 20)' }
+      },
+      required: ['project_path']
+    }
+  },
+  {
+    name: 'seo_fix_plan',
+    description: 'Generates a structured, step-by-step code modification and verification plan for AI coding agents to remediate project SEO issues.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_path: { type: 'string', description: 'Path to project workspace root' },
+        finding_ids: { type: 'array', items: { type: 'string' }, description: 'Optional subset of finding IDs to plan fixes for' }
+      },
+      required: ['project_path']
+    }
+  },
+  {
+    name: 'seo_snapshot_create',
+    description: 'Creates a baseline or milestone project SEO snapshot adhering to canonical schema `seo.gravity/v1`, optionally exporting to a JSON file.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_path: { type: 'string', description: 'Path to project workspace root' },
+        base_url: { type: 'string', description: 'Optional live or dev server URL' },
+        output_path: { type: 'string', description: 'Optional destination file path to save snapshot JSON' }
+      },
+      required: ['project_path']
+    }
+  },
+  {
+    name: 'seo_snapshot_compare',
+    description: 'Compares two SEO project snapshots (e.g. baseline vs current) to compute exact resolved issues, new regressions, and multidimensional score deltas.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        baseline_snapshot: { type: 'object', description: 'Baseline ProjectSnapshot object or file path' },
+        current_snapshot: { type: 'object', description: 'Current ProjectSnapshot object or file path' }
+      },
+      required: ['baseline_snapshot', 'current_snapshot']
+    }
+  },
+  {
+    name: 'seo_regression_check',
+    description: 'Automated CI/PR regression check: compares current project state against a baseline snapshot and returns a pass/fail verdict with regression alerts.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_path: { type: 'string', description: 'Path to project workspace root' },
+        baseline_snapshot: { type: 'object', description: 'Baseline ProjectSnapshot object or file path' },
+        base_url: { type: 'string', description: 'Optional live or dev server URL' }
+      },
+      required: ['project_path', 'baseline_snapshot']
+    }
+  },
+
+  // ==========================================
+  // Layer 1. SERP & Competitor Intelligence
+  // ==========================================
   {
     name: 'seo_serp_analyze',
     description: 'Scrapes live Google SERP for any keyword. Returns top ranking URLs, snippets, People Also Ask (PAA), Related Searches, and rich SERP features.',
@@ -127,7 +231,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 2. GEO & AI Search (AEO)
+  // ==========================================
+  // Layer 2. GEO & AI Search (AEO)
+  // ==========================================
   {
     name: 'seo_geo_ai_readiness_audit',
     description: 'Evaluates content for citation readiness in Google AI Overviews, Perplexity.ai, and ChatGPT Search (checks direct definitions, semantic chunking, tables, and stats).',
@@ -177,7 +283,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 3. Information Gain & E-E-A-T
+  // ==========================================
+  // Layer 3. Information Gain & E-E-A-T
+  // ==========================================
   {
     name: 'seo_information_gain_score',
     description: 'Quantifies content novelty vs top 10 Google results (Google Information Gain Patent) to detect and fix generic AI fluff.',
@@ -202,7 +310,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 4. On-Page & Content Strategy
+  // ==========================================
+  // Layer 4. On-Page & Content Strategy
+  // ==========================================
   {
     name: 'seo_onpage_audit',
     description: 'Comprehensive on-page audit of a URL, local file, or raw HTML (title pixel width, meta CTR, heading hierarchy, image alt, and slug).',
@@ -244,7 +354,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 5. Technical SEO & JS Hydration
+  // ==========================================
+  // Layer 5. Technical SEO & JS Hydration
+  // ==========================================
   {
     name: 'seo_technical_audit',
     description: 'Inspects HTTP status code, redirect chains, canonical consistency, meta robots (noindex/nofollow), hreflang, SSL, and OpenGraph tags.',
@@ -303,7 +415,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 6. Keyword Research & Intent Clustering
+  // ==========================================
+  // Layer 6. Keyword Research & Intent
+  // ==========================================
   {
     name: 'seo_keyword_suggestions',
     description: 'Extracts keyword suggestions and long-tail variations using Google Autocomplete and the Alphabet Soup method.',
@@ -351,7 +465,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 7. Schema & Entity Graph
+  // ==========================================
+  // Layer 7. Schema & Entity Graph
+  // ==========================================
   {
     name: 'seo_entity_salience_map',
     description: 'Extracts core entities, computes salience scores, and extracts Subject-Predicate-Object (SPO) relationship triples.',
@@ -391,7 +507,9 @@ const TOOLS: Tool[] = [
     }
   },
 
-  // 8. Performance, IndexNow & Maintenance
+  // ==========================================
+  // Layer 8. Performance & Maintenance
+  // ==========================================
   {
     name: 'seo_pagespeed_audit',
     description: 'Checks Core Web Vitals (LCP, FCP, CLS, TTFB) with performance optimization fixes.',
@@ -435,7 +553,7 @@ const TOOLS: Tool[] = [
 const server = new Server(
   {
     name: 'seo-gravity-mcp',
-    version: '1.0.0'
+    version: '1.0.2'
   },
   {
     capabilities: {
@@ -458,6 +576,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     let result: any;
 
     switch (name) {
+      // 0. Agent Orchestration & Remediation
+      case 'seo_project_audit':
+        result = await auditProject(a.project_path, a.base_url, a.crawl_depth);
+        break;
+      case 'seo_diagnose':
+        result = await diagnoseSeo(a.project_path, a.target_url_or_file, a.focus_issue_id);
+        break;
+      case 'seo_prioritize':
+        result = await prioritizeFindings(a.project_path, a.max_count);
+        break;
+      case 'seo_fix_plan':
+        result = await generateFixPlan(a.project_path, a.finding_ids);
+        break;
+      case 'seo_snapshot_create':
+        result = await createSnapshotTool(a.project_path, a.base_url, a.output_path);
+        break;
+      case 'seo_snapshot_compare':
+        result = await compareSnapshotsTool(a.baseline_snapshot, a.current_snapshot);
+        break;
+      case 'seo_regression_check':
+        result = await checkRegression(a.project_path, a.baseline_snapshot, a.base_url);
+        break;
+
       // 1. SERP & Competitors
       case 'seo_serp_analyze':
         result = await analyzeSerp(a.query, a.country, a.language, a.num_results);
