@@ -1,0 +1,9 @@
+{
+  "name": "fixture-remix-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@remix-run/node": "^2.8.0",
+    "@remix-run/react": "^2.8.0",
+    "react": "^18.3.0"
+  }
+}

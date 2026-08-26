@@ -1,1578 +1,1115 @@
-Yes. Now that I've seen **v1.0.2**, I'd structure the guidance differently from the previous review.
+Yep — **I checked the new push**, and this is a much bigger update than the previous v1.0.2 change.
 
-You've already made the major conceptual jump. **I would not add another pile of SEO features now.** The next phase should be about making the architecture *deep, reliable, measurable, and genuinely agent-native*.
+The latest feature commit is **v1.1.0**, pushed today, with the explicit scope:
 
-# SEO Gravity — Improvement Blueprint
+> **5-layer architecture, framework adapters, AST precision, invariant regression, Git diff engine & CLI.**
 
-## 0. The North Star
+There was then a tiny follow-up correcting the package author to `thedevbob005`.
 
-Everything should serve this loop:
+I've also looked at the resulting repository structure, not just the commit message: you now have dedicated `adapters`, `providers`, `tools`, `types`, `utils`, a CLI, and tests.
 
-```text
-┌──────────┐
-│ DISCOVER │  Understand the project
-└────┬─────┘
-     ↓
-┌──────────┐
-│ OBSERVE  │  Understand the actual website
-└────┬─────┘
-     ↓
-┌──────────┐
-│ DIAGNOSE │  Find causes, not symptoms
-└────┬─────┘
-     ↓
-┌──────────┐
-│   FIX    │  Give the coding agent actionable changes
-└────┬─────┘
-     ↓
-┌──────────┐
-│ VERIFY   │  Prove the change worked
-└────┬─────┘
-     │
-     └──────────→ repeat
-```
-
-The product should eventually be able to say:
-
-> **“I understand what your website is, what is wrong with it, why it is wrong, where the problem lives in your code, what should change, and whether the change actually worked.”**
-
-That is the bar.
+And **yes, this materially changes my assessment.**
 
 ---
 
-# 1. PRODUCT STRATEGY
+# 1. Overall verdict
 
-### Current
+### Before v1.0.2
 
-**SEO Intelligence + Source-Code Correlation + Remediation Engine**
+> “Promising AI-native SEO MCP.”
 
-Good.
+### v1.0.2
 
-### Eventually
+> “AI-native SEO engineering loop.”
 
-I'd position it as:
+### **v1.1.0**
 
-> **An SEO engineering layer for AI coding agents.**
+> **“You are now building an SEO engineering infrastructure layer.”**
 
-That distinction is subtle but important.
+That's a meaningful architectural transition.
 
-You're not competing primarily with Ahrefs/Semrush.
+Your new positioning:
 
-You're competing with:
+> **“The Enterprise SEO Engineering Layer for AI Coding Agents & CI/CD Pipelines.”**
 
-> **the absence of SEO intelligence inside the software-development loop.**
+actually matches the architecture considerably better now.
 
-### Priority
+I would currently rate the direction around:
 
-**P0 — Keep this positioning.**
+| Category                |       Rating |
+| ----------------------- | -----------: |
+| Product concept         |   **9.5/10** |
+| Architecture            |   **9.3/10** |
+| Agent integration       |   **9.5/10** |
+| Developer tooling       |     **9/10** |
+| SEO breadth             |   **9.5/10** |
+| Regression architecture |     **9/10** |
+| Framework architecture  |     **9/10** |
+| CLI/CI potential        |     **9/10** |
+| Current maturity        | **7.5–8/10** |
+| Differentiation         |   **9.5/10** |
 
-Don't let the project drift back toward becoming another giant SEO toolbox.
-
----
-
-# 2. ARCHITECTURE
-
-Your current architecture is heading in the right direction, but I'd formalize it into five layers.
-
-```text
-┌────────────────────────────────────────────┐
-│              AGENT INTERFACE               │
-│ project_audit / diagnose / fix_plan / etc. │
-├────────────────────────────────────────────┤
-│             INTELLIGENCE LAYER             │
-│ diagnosis / prioritization / opportunities  │
-├────────────────────────────────────────────┤
-│              ANALYSIS LAYER                │
-│ technical / content / entity / GEO / etc.  │
-├────────────────────────────────────────────┤
-│             OBSERVATION LAYER              │
-│ crawl / render / source / SERP / HTML      │
-├────────────────────────────────────────────┤
-│            PROVIDER / SYSTEM               │
-│ HTTP / filesystem / browser / parsers      │
-└────────────────────────────────────────────┘
-```
-
-### Why?
-
-Because otherwise the 35 tools will gradually become 35 independent mini-applications.
-
-You want **shared infrastructure**.
-
-### Priority
-
-**P0**
+The remaining gap is now much less about *what the architecture should be* and much more about **proving that the architecture works reliably in ugly real-world projects.**
 
 ---
 
-# 3. CANONICAL DATA MODEL
+# 2. The 5-layer architecture was the correct move
 
-This is probably your most important technical task now.
-
-You already introduced the concept of a canonical finding model.
-
-Go further.
-
-Create a canonical:
+You've now formalized:
 
 ```text
-Project
-Site
-Page
-Route
-Observation
-Finding
-Evidence
-SourceMapping
-Snapshot
-Change
-Verification
+1. Agent & CLI Interface
+2. Intelligence & Reasoning
+3. Analysis & Invariants
+4. Observation
+5. Provider & Adapter
 ```
 
-relationship.
+This is exactly the separation I was recommending.
+
+And importantly, you've put:
+
+> **Observations ≠ Findings**
+
+directly into the architecture.
+
+That's excellent.
+
+I would **not change this architecture now**.
+
+Instead, I would start treating it as an architectural contract.
+
+---
+
+# 3. The most important improvement: your system now has a real “truth layer”
+
+The addition of:
+
+> **SEO Invariants**
+
+is one of the strongest changes in this release.
+
+This is better than relying on scores.
 
 For example:
 
 ```text
-Project
- ├── Routes
- │    └── Pages
- │         ├── Observations
- │         ├── Findings
- │         └── SourceMappings
- │
- ├── CrawlGraph
- │
- ├── Snapshots
- │
- └── ExternalSignals
-      ├── SERP
-      ├── Competitors
-      └── Performance
+Invariant:
+Page must return HTTP 200
 ```
-
-Then your individual tools become **producers/consumers of this model**.
-
-This will prevent architecture drift later.
-
-### Priority
-
-**P0**
-
----
-
-# 4. FINDINGS
-
-Your Finding model is one of the best things you've added.
-
-I'd make it extremely formal.
-
-Something like:
 
 ```text
-Finding
-├── identity
-│   ├── id
-│   ├── category
-│   └── rule
-│
-├── severity
-│   ├── severity
-│   ├── confidence
-│   └── impact
-│
-├── evidence
-│   ├── observations
-│   ├── provenance
-│   └── evidenceType
-│
-├── location
-│   ├── URL
-│   ├── route
-│   ├── sourceFile
-│   └── sourceRange
-│
-├── reasoning
-│   ├── rootCause
-│   └── explanation
-│
-├── remediation
-│   ├── recommendation
-│   ├── effort
-│   └── expectedImpact
-│
-└── verification
-    ├── method
-    └── expectedResult
+Invariant:
+Indexable page must not have noindex
 ```
 
-### Add one particularly important field:
-
-**`provenance`**
-
-Example:
-
-```json
-{
-  "analyzer": "seo_technical_audit",
-  "source": "rendered_dom",
-  "timestamp": "...",
-  "provider": "native"
-}
+```text
+Invariant:
+Canonical must resolve to a valid URL
 ```
 
-This makes debugging conflicting findings much easier.
+```text
+Invariant:
+Structured data must remain valid
+```
 
-### Priority
+Now regression testing has an actual semantic basis.
 
-**P0**
+### This is where I'd go further.
 
----
+Create a formal invariant registry:
 
-# 5. OBSERVATION ≠ FINDING
+```text
+InvariantRegistry
+├── HTTP
+├── Indexability
+├── Canonical
+├── Metadata
+├── Links
+├── Sitemap
+├── Robots
+├── Schema
+├── Rendering
+└── Performance
+```
 
-I'd explicitly enforce this distinction.
+Each invariant should have:
+
+```text
+id
+description
+severity
+scope
+evaluation
+failure evidence
+verification
+```
 
 For example:
 
-### Observation
-
 ```text
-canonical = absent
-```
+SEO-CANONICAL-001
 
-### Finding
+Scope:
+indexable HTML pages
 
-```text
-A canonicalization signal is missing.
-```
+Invariant:
+canonical must resolve successfully
 
-### Recommendation
+Severity:
+high
 
-```text
-Generate canonical URL using route's normalized origin/path.
-```
+Evidence:
+rendered DOM
 
-### Verification
-
-```text
-Re-render page and verify canonical.
-```
-
-This separation is extremely valuable for AI.
-
-It prevents tools from mixing raw facts with interpretation.
-
-### Priority
-
-**P0**
-
----
-
-# 6. SOURCE-CODE CORRELATION
-
-This is your biggest differentiator.
-
-I'd make it much deeper.
-
-Don't stop at:
-
-```text
-/blog/foo
-→ page.tsx
-```
-
-Try to establish:
-
-```text
-URL
- ↓
-Route
- ↓
-Route parameters
- ↓
-Page/component
- ↓
-Metadata implementation
- ↓
-Relevant AST node
- ↓
-Exact source range
-```
-
-Example:
-
-```text
-/blog/foo
-
-Route:
-app/blog/[slug]/page.tsx
-
-Metadata:
-generateMetadata()
-
-Problem:
+Failure:
 canonical missing
 
-Relevant source:
-line 42–57
-
-Likely fix:
-return {
-  alternates: {
-    canonical: ...
-  }
-}
+Verification:
+re-render + inspect
 ```
 
-That is the moment where SEO Gravity becomes extremely valuable to a coding agent.
-
-### Priority
-
-**P0**
+### **Priority: P0**
 
 ---
 
-# 7. FRAMEWORK ADAPTERS
+# 4. AST precision is probably the biggest technical leap
 
-You currently mention:
+The v1.0.2 system was doing source correlation.
 
-* Next.js
+Now you're explicitly saying:
+
+> **AST nodes and line numbers.**
+
+That's substantially better.
+
+The difference is:
+
+### Before
+
+```text
+/blog/foo
+→ app/blog/[slug]/page.tsx
+```
+
+### Now
+
+```text
+/blog/foo
+→ app/blog/[slug]/page.tsx
+→ generateMetadata()
+→ lines 42–57
+→ missing alternates.canonical
+```
+
+That is exactly what a coding agent needs.
+
+---
+
+# 5. Your framework adapter architecture is now much healthier
+
+The new repository has a dedicated:
+
+```text
+src/adapters/
+```
+
+and the README describes separate adapters for:
+
+* Next App Router
+* Next Pages Router
 * Astro
-* Vite
+* Vite/React
 * Remix
 * SvelteKit
+* Static HTML
 
-Good.
+This is **much better than framework-specific conditionals scattered through the engine**.
 
-Don't implement framework detection as one giant conditional system.
+I'd preserve this aggressively.
 
-Create adapters:
+The interface should conceptually become:
 
 ```text
 FrameworkAdapter
-├── NextAdapter
-├── AstroAdapter
-├── ViteReactAdapter
-├── RemixAdapter
-└── SvelteKitAdapter
-```
 
-Each adapter should answer:
-
-```text
 detect()
 discoverRoutes()
-mapRouteToSource()
-findMetadata()
-findCanonical()
-findRobots()
-findSitemap()
-findSchema()
+resolveRoute()
+findSource()
+inspectMetadata()
+inspectCanonical()
+inspectSchema()
+inspectRobots()
+inspectSitemap()
 ```
 
-Then framework-specific logic doesn't pollute the core engine.
-
-### Priority
-
-**P0**
+The core engine shouldn't care whether it's Next.js or Astro.
 
 ---
 
-# 8. CRAWL GRAPH
+# 6. One thing I would add to adapters: confidence
 
-Your new graph functionality is good.
+Framework detection isn't always deterministic.
 
-Now turn the graph into a **first-class primitive**.
-
-Don't make it merely a report generated by `seo_project_audit`.
-
-It should become:
+For example:
 
 ```text
-CrawlGraph
-├── nodes
-├── edges
-├── depths
-├── components
-├── orphanNodes
-├── hubs
-└── metrics
+package.json
++ vite.config
++ react-router
 ```
 
-Then multiple analyzers can consume it:
+might strongly suggest Vite React.
+
+But:
 
 ```text
-Internal linking
-        ↓
-Discoverability
-        ↓
-Content architecture
-        ↓
-SEO prioritization
+monorepo/
+apps/web/
+packages/ui/
 ```
 
-### Priority
+gets more complicated.
 
-**P1**
+So adapter detection should produce:
+
+```text
+framework:
+  ViteReact
+
+confidence:
+  0.94
+
+evidence:
+  package.json
+  vite.config.ts
+  src/main.tsx
+```
+
+That fits beautifully with your existing evidence model.
 
 ---
 
-# 9. PAGE IDENTITY
+# 7. The CLI is a very important addition
 
-You need a robust concept of a page.
+This is the part I didn't have in the previous assessment.
 
-Because:
+You've now got:
 
-```text
-https://example.com/foo
-https://example.com/foo/
-https://example.com/foo?utm=x
+```bash
+npx seo-gravity-mcp audit
+npx seo-gravity-mcp snapshot
+npx seo-gravity-mcp check
+npx seo-gravity-mcp diff
 ```
 
-may represent the same logical page.
+This is excellent because it makes the core engine useful **without an LLM**.
 
-Define:
+That is architecturally important.
+
+Your system is becoming:
 
 ```text
-logicalPageId
-canonicalUrl
-observedUrl
+              SEO Gravity Core
+                    │
+        ┌───────────┴───────────┐
+        ↓                       ↓
+       MCP                     CLI
+        ↓                       ↓
+      Agent                    CI
 ```
 
-Otherwise your crawl graph, snapshots and regression engine will eventually produce false positives.
-
-### Priority
-
-**P0**
+That's the correct relationship.
 
 ---
 
-# 10. SNAPSHOTS
+# 8. And this gives you a very interesting new positioning
 
-This is a very strong feature.
+You can now honestly have:
 
-But don't make snapshots simply:
+### AI mode
 
-> “JSON dump of current SEO results.”
+> “Fix the SEO problems in my project.”
 
-They should represent a **state**.
+### Developer mode
 
-Something like:
+> “Audit my project.”
 
-```text
-Snapshot
-├── project identity
-├── git commit
-├── timestamp
-├── crawl configuration
-├── environment
-├── framework
-├── graph
-├── page observations
-├── findings
-├── scores
-└── analyzer versions
-```
+### CI mode
 
-The Git commit is particularly useful.
+> “Reject this PR if SEO invariants regress.”
 
-Then:
+Those are three different users of the same engine.
 
-```text
-snapshot A
-commit abc123
-
-snapshot B
-commit def456
-```
-
-becomes meaningful.
-
-### Priority
-
-**P0**
+That's powerful.
 
 ---
 
-# 11. REGRESSION ENGINE
+# 9. Git differential auditing is potentially a killer feature
 
-This is where I'd be careful.
+The new:
 
-Don't define regression as:
-
-```text
-score went down
+```bash
+npx seo-gravity-mcp diff --project ./my-app --base-ref origin/main
 ```
 
-Instead:
+is one of the features I'd now prioritize heavily.
+
+Because now you can avoid:
 
 ```text
-Regression =
-previously valid invariant
-        ↓
-now violated
+crawl everything
 ```
 
-Examples:
-
-```text
-Canonical existed → now missing
-200 page → now 404
-indexable page → now noindex
-Schema valid → now invalid
-Internal link existed → now broken
-```
-
-That's a real regression.
-
-A score declining isn't necessarily one.
-
-### Add categories:
-
-```text
-NEW_REGRESSION
-RESOLVED
-UNCHANGED
-EXPECTED_CHANGE
-UNKNOWN
-```
-
-This will make the system much more trustworthy.
-
-### Priority
-
-**P0**
-
----
-
-# 12. EXPECTED CHANGES
-
-This follows directly from regression.
-
-Eventually let the agent declare:
-
-```text
-Expected changes:
-- /old-blog removed intentionally
-- /new-blog added intentionally
-```
-
-Then the regression engine doesn't scream about legitimate modifications.
-
-This could later integrate with Git diffs.
-
-### Priority
-
-**P1**
-
----
-
-# 13. GIT INTEGRATION
-
-This should be your next major expansion after the current foundation stabilizes.
-
-Imagine:
+and instead:
 
 ```text
 git diff
-    ↓
-SEO Gravity
-    ↓
-Affected routes
-    ↓
-Targeted SEO analysis
-    ↓
-Regression check
-```
-
-Instead of crawling the entire project every time.
-
-That becomes:
-
-> **SEO-aware code review.**
-
-Potential output:
-
-```text
-PR #42
-
-SEO impact
-
-+ Added canonical to 14 pages
-+ Added Article schema
-- Removed internal links from /blog
-⚠ 2 pages became unreachable
-```
-
-This is a killer developer feature.
-
-### Priority
-
-**P1**
-
----
-
-# 14. DIFFERENTIAL ANALYSIS
-
-Once Git is available, don't always re-audit everything.
-
-Determine:
-
-```text
+ ↓
 changed files
  ↓
 affected routes
  ↓
 affected SEO signals
  ↓
-affected graph regions
+targeted audit
+```
+
+That is exactly how developer tooling should behave.
+
+---
+
+# 10. But I would make the Git engine more intelligent
+
+Don't stop at:
+
+> “Which files changed?”
+
+Build:
+
+```text
+Changed File
+ ↓
+AST changes
+ ↓
+semantic changes
+ ↓
+affected route
+ ↓
+affected SEO invariants
 ```
 
 For example:
 
 ```text
-app/blog/[slug]/page.tsx changed
-```
-
-might trigger:
-
-```text
-/blog/*
-metadata
-schema
-internal links
-rendered HTML
-```
-
-but not:
-
-```text
-/products/*
-```
-
-This can massively improve speed.
-
-### Priority
-
-**P1**
-
----
-
-# 15. PRIORITIZATION
-
-Your:
-
-```text
-Impact × Confidence × Reach / Effort
-```
-
-is good.
-
-I'd add **dependency ordering**, but don't overcomplicate it yet.
-
-More importantly, make the score deterministic.
-
-The LLM shouldn't decide:
-
-> “This feels like a 9.”
-
-Have actual rules where possible.
-
-Then let the LLM explain the result.
-
-### Principle
-
-> **Code computes. AI interprets.**
-
-That's a very good design philosophy for this project.
-
-### Priority
-
-**P0**
-
----
-
-# 16. AI SHOULD NOT BE THE SOURCE OF TRUTH
-
-This is extremely important.
-
-SEO Gravity should calculate:
-
-```text
-HTTP status
-DOM structure
-canonical
-robots
-links
-schema validity
-route mappings
-graph metrics
-```
-
-The LLM should reason about:
-
-```text
-why
-what matters
-what to change
-how to prioritize
-```
-
-Don't have the LLM hallucinate facts that the engine could deterministically calculate.
-
-### Priority
-
-**P0**
-
----
-
-# 17. CONFIDENCE SYSTEM
-
-You've already introduced:
-
-```text
-0.0–1.0
-```
-
-Good.
-
-I'd make confidence **evidence-driven**.
-
-Example:
-
-```text
-Observed DOM
-→ 0.99
-
-Static AST inspection
-→ 0.95
-
-Cross-analyzer agreement
-→ +confidence
-
-Heuristic NLP inference
-→ 0.60
-
-Prediction
-→ 0.35
-```
-
-Don't pretend all analyzers are equally reliable.
-
-### Priority
-
-**P1**
-
----
-
-# 18. GEO / AEO
-
-Your updated approach is much better because you've moved toward **retrieval signals + evidence tiers**.
-
-Keep going in that direction.
-
-I would structure GEO around:
-
-```text
-AI Retrieval
-├── Answerability
-├── Extractability
-├── Context completeness
-├── Entity clarity
-├── Evidence quality
-├── Citation support
-├── Information uniqueness
-└── Source authority
-```
-
-Don't claim:
-
-> “This page will be cited by ChatGPT.”
-
-Claim:
-
-> “This page exhibits strong/weak signals associated with retrieval and citation.”
-
-Much more defensible.
-
-### Priority
-
-**P1**
-
----
-
-# 19. COMPETITOR ENGINE
-
-Don't spend too much time making competitor scores prettier.
-
-Make competitors useful for **gap discovery**.
-
-Think:
-
-```text
-Your page
-    │
-    ├── missing topic
-    ├── missing entity
-    ├── missing question
-    ├── missing evidence
-    ├── missing experience
-    └── missing intent
-```
-
-That information should feed directly into:
-
-```text
-seo_prioritize
-```
-
-and potentially:
-
-```text
-seo_fix_plan
-```
-
-So competitor intelligence becomes an input into remediation rather than a dead-end report.
-
-### Priority
-
-**P1**
-
----
-
-# 20. OPPORTUNITIES
-
-You have findings.
-
-Now add a separate concept:
-
-```text
-Finding ≠ Opportunity
-```
-
-### Finding
-
-> Canonical missing.
-
-### Opportunity
-
-> Competitors answer a high-volume question your site doesn't address.
-
-That distinction is useful.
-
-Eventually:
-
-```text
-Issues
-Opportunities
-Experiments
-```
-
-could be separate concepts.
-
-### Priority
-
-**P1**
-
----
-
-# 21. EXPERIMENTATION
-
-This is a longer-term idea, but potentially huge.
-
-Instead of:
-
-> “Improve SEO.”
-
-An agent could eventually reason:
-
-```text
-Hypothesis:
-Adding FAQ coverage will improve query coverage.
-
-Baseline:
-Current page covers 8/15 detected intent questions.
-
 Change:
-Add 5 relevant questions.
+app/blog/[slug]/page.tsx
 
-Verification:
-Re-analyze semantic coverage.
+Detected:
+generateMetadata() changed
+
+Potentially affected:
+TITLE
+DESCRIPTION
+CANONICAL
+OG
+TWITTER
 ```
 
-That turns SEO Gravity into an **SEO experimentation system**.
+Then only those checks need to run.
 
-### Priority
+That's **much more interesting than generic Git diffing.**
 
-**P2**
+### Priority: P1
 
 ---
 
-# 22. TOOL DESIGN
+# 11. Your regression system is now conceptually much stronger
 
-35 tools are fine.
+Previously I was concerned that:
 
-I wouldn't worry about the number anymore.
+> score dropped = regression
 
-But internally organize them into:
+could become problematic.
 
-### Primitive
+Now you've moved toward:
 
-```text
-fetch
-crawl
-render
-parse
-inspect
-snapshot
-```
+> **invariant-based regression.**
 
-### Analysis
+Excellent.
+
+I strongly recommend making the distinction explicit:
 
 ```text
-technical
-content
-schema
-entity
-GEO
-competitor
+REGRESSION
+Expected Change
+Resolved
+Unchanged
+Unknown
 ```
 
-### Orchestration
+A score changing is only a secondary signal.
 
-```text
-project_audit
-diagnose
-prioritize
-fix_plan
-```
-
-### Verification
-
-```text
-snapshot_compare
-regression_check
-```
-
-This gives you a clean future path to 50+ tools without creating chaos.
+The invariant is the actual gate.
 
 ---
 
-# 23. CONTEXT MANAGEMENT
+# 12. Don't let “zero regressions” become “never change”
 
-This is going to become important surprisingly quickly.
+This is the subtle problem I'd guard against.
 
-A large project could generate:
-
-```text
-500 routes
-20k links
-thousands of observations
-hundreds of findings
-```
-
-Don't dump all of that into the agent context.
-
-Use hierarchical retrieval:
+Suppose the developer intentionally removes:
 
 ```text
-Project Summary
-      ↓
-Top Findings
-      ↓
-Finding Details
-      ↓
-Route Details
-      ↓
-Source Details
+/blog/old-post
 ```
 
-The agent should **drill down**.
+and returns 410.
 
-Not receive the whole database every time.
+That's not necessarily a regression.
 
-### Priority
+The system should understand:
 
-**P0**
+```text
+Expected architectural change
+```
+
+rather than:
+
+```text
+SEO regression
+```
+
+This is where your Git integration can become very useful.
 
 ---
 
-# 24. CACHING
+# 13. The biggest architectural weakness I see now
 
-You will want caching for:
+Your `src/index.ts` is currently **26 KB** according to the repository tree.
 
-* page fetches
-* rendered pages
-* SERP
-* competitor pages
-* PageSpeed
-* entity analysis
+That's a yellow flag.
 
-Use content hashes where possible.
+You have already introduced:
 
 ```text
-URL
-+
-request parameters
-+
-content hash
+adapters
+providers
+tools
+types
+utils
+cli
 ```
 
-Then avoid unnecessary repeated work.
+which is good.
 
-This becomes particularly important because agents tend to call tools repeatedly while reasoning.
+But if `index.ts` still contains a huge amount of tool registration/orchestration logic, I'd aggressively shrink it.
 
-### Priority
-
-**P1**
-
----
-
-# 25. PROVIDER ABSTRACTION
-
-Keep your zero-cost model.
-
-It's a major selling point.
-
-But abstract external providers:
+Ideally:
 
 ```text
-SERPProvider
-PageSpeedProvider
-SearchProvider
-IndexingProvider
-KnowledgeProvider
+index.ts
+  ↓
+server bootstrap
+  ↓
+tool registry
 ```
 
-Then:
+rather than:
 
 ```text
-Built-in provider
-        ↓
-optional external provider
+index.ts
+  ↓
+everything
 ```
 
-This gives you:
-
-* zero-cost default
-* better reliability when configured
-* future commercial integrations
-
-without changing the MCP API.
-
-### Priority
-
-**P1**
-
----
-
-# 26. RELIABILITY STATES
-
-Every analyzer should distinguish:
-
-```text
-PASS
-FAIL
-WARNING
-UNKNOWN
-NOT_APPLICABLE
-```
-
-This is extremely important.
-
-For example:
-
-> PageSpeed API unavailable
-
-must **not** become:
-
-> Performance failed.
-
-It should be:
-
-```text
-UNKNOWN
-
-Reason:
-Performance provider unavailable.
-```
-
-Otherwise your regression engine will eventually generate garbage.
-
-### Priority
-
-**P0**
-
----
-
-# 27. SECURITY
-
-As the system becomes more autonomous, security becomes increasingly important.
-
-Especially:
-
-### SSRF
-
-Protect arbitrary URL fetching against:
-
-```text
-127.0.0.1
-localhost
-private networks
-cloud metadata endpoints
-```
-
-while allowing intentional development-server access.
-
-### Prompt injection
-
-Treat crawled page content as **untrusted data**.
-
-Never allow website text to become instructions for the agent.
-
-### Side effects
-
-Explicitly classify tools:
-
-```text
-READ_ONLY
-EXTERNAL_SIDE_EFFECT
-FILE_SIDE_EFFECT
-```
-
-Your `seo_indexnow_submit` is already an example of a side-effecting operation.
-
-### Priority
-
-**P0**
-
----
-
-# 28. TESTING
-
-This is probably where I'd spend a lot of your next development time.
-
-Create fixtures:
-
-```text
-fixtures/
-├── nextjs-perfect
-├── nextjs-broken
-├── nextjs-dynamic
-├── astro
-├── vite-react
-├── remix
-├── sveltekit
-├── static
-└── ecommerce
-```
-
-And deliberately introduce:
-
-```text
-missing canonical
-bad metadata
-noindex
-broken sitemap
-bad schema
-orphan page
-CSR-only content
-broken links
-duplicate URLs
-```
-
-Then test the entire loop:
-
-```text
-project
- ↓
-audit
- ↓
-finding
- ↓
-source correlation
- ↓
-fix plan
- ↓
-change
- ↓
-snapshot
- ↓
-regression
-```
-
-**This is much more valuable now than another SEO analyzer.**
-
-### Priority
-
-**P0**
-
----
-
-# 29. END-TO-END GOLDEN TESTS
-
-Unit tests aren't enough.
-
-Create a handful of “golden projects” where you know:
-
-```text
-Expected findings:
-SEO-001
-SEO-007
-SEO-013
-```
-
-Then run:
-
-```text
-seo_project_audit(project)
-```
-
-and compare against expected output.
-
-This protects the whole system from accidental architectural regressions.
-
-### Priority
-
-**P0**
-
----
-
-# 30. DOCUMENTATION
-
-Your new README is considerably better.
-
-But I'd change the opening experience to emphasize **one workflow**, not 35 tools.
+### Target
 
 Something like:
 
 ```text
-Install
-
-npx -y seo-gravity-mcp
+src/
+├── server/
+│   ├── server.ts
+│   └── registry.ts
+│
+├── core/
+│   ├── audit.ts
+│   ├── diagnosis.ts
+│   ├── regression.ts
+│   └── scoring.ts
+│
+├── adapters/
+├── providers/
+├── tools/
+├── types/
+├── utils/
+└── cli.ts
 ```
 
-Then:
+You may already be moving there; I'm just saying **don't let `index.ts` remain the gravitational center of the application.**
 
-> Ask your coding agent:
-
-```text
-"Audit this project for SEO problems,
-prioritize the important ones,
-and tell me which source files need changes."
-```
-
-Then show a realistic response.
-
-**That sells the project better than the tool catalog.**
+### Priority: P1
 
 ---
 
-# 31. DEMO
+# 14. You have a `test/` directory now — excellent
 
-You need one excellent demo project.
-
-I'd actually create:
+The repository now has both:
 
 ```text
-seo-gravity-demo/
+test/
 ```
 
-with intentionally broken SEO.
-
-Then record:
+and:
 
 ```text
-Agent:
-"Audit this project."
-
-SEO Gravity:
-43 routes discovered
-17 findings
-5 critical
-
-Agent:
-"Diagnose critical findings."
-
-SEO Gravity:
-canonical → source file X
-metadata → source file Y
-schema → source file Z
-
-Agent:
-"Fix them."
-
-...
-
-SEO Gravity:
-5/5 resolved
-0 regressions
+src/test.ts
 ```
 
-That would communicate your value proposition instantly.
+This is where I'd now put significant effort.
+
+Because with this architecture, the **tests become your proof that the SEO engineering layer actually works.**
 
 ---
 
-# 32. VERSIONING
+# 15. Your next major milestone should be framework fixture testing
 
-You're now at:
-
-**v1.0.2**
-
-Good time to establish proper compatibility rules.
-
-I'd version:
+I'd create:
 
 ```text
-MCP API
-Finding schema
-Snapshot schema
-Tool schemas
+fixtures/
+├── next-app/
+├── next-pages/
+├── astro/
+├── vite-react/
+├── remix/
+├── sveltekit/
+└── static/
 ```
 
-separately if necessary.
+Each with deliberately broken SEO.
 
-You already have:
+For example:
 
 ```text
-seo.gravity/v1
+next-app/broken/
+├── missing-title
+├── missing-description
+├── missing-canonical
+├── noindex-leak
+├── broken-schema
+├── CSR-only-content
+└── broken-internal-link
 ```
 
-for snapshots.
+Then assert:
+
+```text
+route
+→ finding
+→ AST location
+→ invariant
+→ fix guidance
+```
+
+This would be enormously valuable.
+
+---
+
+# 16. I would add a “correlation accuracy” test suite
+
+This is specific to your differentiator.
+
+You want tests like:
+
+```text
+Expected:
+
+URL:
+ /products/[slug]
+
+Source:
+ app/products/[slug]/page.tsx
+
+Symbol:
+ generateMetadata
+
+Range:
+ 42–61
+```
+
+If that mapping is wrong, the entire AI remediation workflow becomes dangerous.
+
+So treat source correlation almost like a compiler feature.
+
+### Priority: P0
+
+---
+
+# 17. Provider layer
+
+You now have:
+
+```text
+src/providers/
+```
 
 Good.
 
-Do the same conceptually for your other stable contracts.
+I'd keep providers strictly about **external facts**.
+
+For example:
+
+```text
+SERPProvider
+PageSpeedProvider
+WebFetchProvider
+SearchProvider
+IndexingProvider
+```
+
+And don't put business/SEO reasoning inside providers.
+
+Provider:
+
+> “Here are the SERP results.”
+
+Analyzer:
+
+> “Here are the competitive gaps.”
+
+That keeps your architecture clean.
 
 ---
 
-# 33. CI/CD
+# 18. Cache layer
 
-Once regression is solid, expose:
+The v1.1 architecture mentions cache at the provider layer.
 
-```bash
-seo-gravity check
-```
+Good.
 
-or equivalent.
-
-Potential future:
+I'd make cache provenance explicit:
 
 ```text
-GitHub PR
-      ↓
-SEO Gravity
-      ↓
-SEO regression
-      ↓
-GitHub check
+cached:
+true
+
+fetchedAt:
+2026-08-26T...
+
+provider:
+native-serp
+
+age:
+37 minutes
 ```
+
+Especially for SERP and competitor analysis.
+
+Otherwise an agent won't know whether it's looking at current or stale information.
+
+---
+
+# 19. One thing I would NOT do
+
+Don't turn the provider layer into a giant abstraction framework.
+
+You don't need:
+
+```text
+AbstractProviderFactory
+ProviderResolver
+ProviderRegistryFactory
+ProviderStrategyManager
+```
+
+for everything.
+
+Keep it boring.
+
+```text
+interface SerpProvider {
+  search(...)
+}
+```
+
+Simple interfaces are enough.
+
+---
+
+# 20. Your “Intelligence & Reasoning Layer” deserves a boundary
+
+I like the layer, but I'd define its job carefully.
+
+It should do:
+
+```text
+observations
+ ↓
+findings
+ ↓
+root cause
+ ↓
+priority
+ ↓
+fix plan
+```
+
+It should **not** fetch webpages.
+
+It should **not** parse ASTs.
+
+It should **not** talk directly to Git.
+
+Those belong below it.
+
+This will prevent your intelligence layer becoming another god object.
+
+---
+
+# 21. Deterministic vs AI reasoning
+
+I'd explicitly divide the intelligence layer:
+
+### Deterministic
+
+```text
+severity
+priority
+reach
+effort
+invariants
+graph metrics
+```
+
+### Heuristic
+
+```text
+information gain
+GEO signals
+content opportunity
+entity salience
+```
+
+### Agentic
+
+```text
+root-cause interpretation
+fix strategy
+implementation plan
+```
+
+This is one of the most important architectural boundaries for an AI-native tool.
+
+---
+
+# 22. Your CLI should eventually expose machine-readable output
+
+Right now humans can use:
+
+```bash
+seo-gravity audit
+```
+
+But CI needs:
+
+```bash
+seo-gravity audit --format json
+```
+
+and perhaps:
+
+```bash
+--format sarif
+```
+
+**SARIF would be especially interesting.**
+
+Then GitHub code scanning / CI tooling can consume findings directly.
 
 Example:
 
-```text
-SEO Gravity
-
-✓ 0 new critical issues
-✓ 0 indexability regressions
-✓ 0 metadata regressions
-✓ 0 structured-data regressions
-⚠ 3 new opportunities
-
-PASS
+```bash
+seo-gravity check \
+  --baseline baseline.json \
+  --format sarif \
+  --output seo-results.sarif
 ```
 
-That gives the project a life outside MCP.
+That's a very natural next step.
 
-### Priority
-
-**P1**
+### Priority: P1
 
 ---
 
-# 34. MCP SHOULD NOT BE THE ONLY INTERFACE
+# 23. Exit codes are good — formalize them
 
-This is a longer-term architectural point.
+You already describe CI as exiting `0` or `1`.
 
-Your core engine should ideally be:
+Eventually consider:
 
 ```text
-seo-gravity-core
+0 = pass
+1 = invariant regression
+2 = configuration error
+3 = analyzer failure
+4 = partial/unknown
 ```
 
-with:
+Don't collapse:
+
+> “SEO regression”
+
+and
+
+> “couldn't access the project”
+
+into the same CI status.
+
+---
+
+# 24. One concern about the README wording
+
+You've now called it:
+
+> **“Enterprise SEO Engineering Layer.”**
+
+I understand why.
+
+But I'd be slightly cautious.
+
+The architecture is **enterprise-oriented**.
+
+The evidence for enterprise maturity is not there yet.
+
+I would personally use:
+
+> **“SEO Engineering Infrastructure for AI Coding Agents & CI/CD.”**
+
+It sounds just as serious while avoiding a claim about maturity.
+
+Once you have:
+
+* comprehensive fixtures
+* CI
+* documented guarantees
+* stable schemas
+* benchmarks
+* real users
+
+then “enterprise” becomes much easier to defend.
+
+---
+
+# 25. I think you're now ready for a benchmark suite
+
+This is the next thing I'd build after the architecture.
+
+Create something like:
+
+# SEO Gravity Benchmark
 
 ```text
-             ┌── MCP
-             │
-Core Engine ─┼── CLI
-             │
-             ├── CI
-             │
-             └── future API
+Frameworks:
+Next.js
+Astro
+Vite
+Remix
+SvelteKit
+
+Scenarios:
+10–30 SEO defects each
 ```
 
-Then MCP becomes the **agent interface**, not the entire application architecture.
-
-This is a very important distinction if the project grows.
-
-### Priority
-
-**P1/P2**
-
----
-
-# 35. The Feature Roadmap I'd Actually Follow
-
-## 🔴 P0 — Do these next
-
-**Do not add new SEO domains yet.**
-
-1. Canonical data model
-2. Finding model
-3. Observation/finding separation
-4. Source-code correlation depth
-5. Framework adapter architecture
-6. Snapshot robustness
-7. Regression correctness
-8. PASS/FAIL/UNKNOWN semantics
-9. Context-size management
-10. Security boundaries
-11. End-to-end fixture tests
-
----
-
-## 🟠 P1 — Then
-
-1. Git integration
-2. Differential analysis
-3. CI regression checks
-4. Caching
-5. Provider abstraction
-6. Opportunity engine
-7. Better competitor gap → remediation pipeline
-8. Better crawl graph
-9. Performance optimization
-10. Demo project
-
----
-
-## 🟡 P2 — After the foundation
-
-1. SEO experiments
-2. Advanced GEO modeling
-3. historical trend analysis
-4. Search Console integration
-5. Analytics integration
-6. premium provider integrations
-7. automated monitoring
-8. broader framework coverage
-
----
-
-# 36. What I Would NOT Build Right Now
-
-This is just as important.
-
-I would **not** currently spend significant time on:
-
-❌ 10 more keyword tools
-❌ another 15 schema types
-❌ prettier SEO scores
-❌ elaborate dashboards
-❌ another competitor metric
-❌ increasingly speculative AI-ranking predictions
-❌ a web UI
-❌ an SEO SaaS backend
-
-You already have enough surface area.
-
-Your bottleneck is now **depth, reliability, and integration**.
-
----
-
-# 37. The Ultimate Test
-
-I would make this your internal acceptance test:
-
-> Take a completely unfamiliar Next.js project containing 10–20 deliberate SEO problems.
-
-Give an AI agent only:
+Measure:
 
 ```text
-SEO Gravity MCP
-+
-normal coding tools
-```
-
-Then say:
-
-> **“Make this project SEO-ready.”**
-
-And measure:
-
-```text
-Discovery accuracy
+Detection precision
+Detection recall
 Source correlation accuracy
-Finding precision
-Finding recall
-Prioritization quality
-Fix-plan usefulness
-Regression detection
-False positives
-False negatives
-Tokens consumed
-Time taken
+False positive rate
+Regression detection accuracy
+Runtime
+Token/context cost
 ```
 
-Then repeat with:
+Then publish the results.
 
-* Astro
-* Vite
-* Remix
-* SvelteKit
-
-If SEO Gravity performs well on that experiment, **you'll have evidence that the architecture works**, not just an impressive feature list.
+That would be **far more persuasive than adding another 10 tools.**
 
 ---
 
-# My revised strategic verdict
+# 26. Your project has effectively become two products
 
-Your v1.0.2 update is a **very significant improvement**.
+This is something I hadn't emphasized enough before.
 
-The important thing isn't that you went from **28 → 35 tools**.
+You now have:
 
-It's that you went from:
-
-```text
-SEO tools
-```
-
-to:
+## SEO Gravity Engine
 
 ```text
-SEO engineering loop
+CLI
+CI/CD
+snapshots
+regression
+audit
 ```
 
-The next evolution should be:
+and:
+
+## SEO Gravity Agent Interface
 
 ```text
-SEO engineering loop
-        ↓
-Reliable SEO engineering loop
-        ↓
-Framework-aware SEO engineering loop
-        ↓
-Git/CI-aware SEO engineering loop
-        ↓
-Continuous SEO engineering infrastructure
+MCP
+Antigravity
+Cursor
+Claude Code
+etc.
 ```
 
-And if you execute that progression well, **SEO Gravity becomes something considerably more interesting than an MCP implementation**.
+That's excellent.
 
-It becomes the layer that lets an AI coding agent answer:
+Don't force the architecture to make MCP the center.
 
-> **“Did the website I just built actually become better for search—and can I prove it?”**
+The **engine is the product.**
 
-That's the question I'd build the entire next phase around.
+MCP is one of its most important interfaces.
+
+---
+
+# 27. Long-term architecture
+
+I now see the project evolving toward:
+
+```text
+                      SEO GRAVITY
+                           │
+                 ┌─────────┴─────────┐
+                 │                   │
+              CORE ENGINE       KNOWLEDGE
+                 │                   │
+        ┌────────┼────────┐          │
+        ↓        ↓        ↓          ↓
+     Audit    Analyze   Verify    Historical
+        │        │        │       snapshots
+        │        │        │
+        └────────┼────────┘
+                 ↓
+             Findings
+                 ↓
+             Diagnosis
+                 ↓
+             Fix Plan
+                 ↓
+       ┌─────────┴─────────┐
+       ↓                   ↓
+      MCP                  CLI
+       ↓                   ↓
+  AI Coding Agent        CI/CD
+```
+
+That's a serious architecture.
+
+---
+
+# 28. What I would do next — in order
+
+## 🔴 P0 — Don't add features
+
+### 1. Build framework fixture projects
+
+### 2. Test source correlation
+
+### 3. Test invariant detection
+
+### 4. Test regression correctness
+
+### 5. Test snapshots
+
+### 6. Separate deterministic/heuristic/agentic reasoning
+
+### 7. Refactor `index.ts` if necessary
+
+### 8. Formalize error/unknown states
+
+---
+
+## 🟠 P1 — Developer infrastructure
+
+### 9. Git-aware affected-route analysis
+
+### 10. SARIF output
+
+### 11. Better CI integration
+
+### 12. Cache/provenance
+
+### 13. Incremental analysis
+
+### 14. Benchmark suite
+
+---
+
+## 🟡 P2 — Intelligence
+
+Only after the above:
+
+### 15. Search Console
+
+### 16. Analytics
+
+### 17. Advanced GEO
+
+### 18. Historical trend detection
+
+### 19. SEO experiments
+
+### 20. Opportunity discovery
+
+---
+
+# 29. The biggest change in my opinion
+
+After seeing this push, **I no longer think your biggest challenge is architectural design.**
+
+You've pretty much solved the first version of that.
+
+Your biggest challenge is now:
+
+> **Can you prove that the abstractions you've built correspond reliably to reality?**
+
+Especially:
+
+```text
+URL
+ ↓
+route
+ ↓
+source
+ ↓
+AST
+ ↓
+observation
+ ↓
+finding
+ ↓
+invariant
+ ↓
+fix
+ ↓
+verification
+```
+
+If that chain is reliable, **SEO Gravity is genuinely differentiated.**
+
+If any link is flaky, the agent can make incorrect changes with a lot of confidence.
+
+So I'd spend the next serious development cycle making that chain **boringly reliable**.
+
+And honestly, **v1.1.0 is the first version where I'd be comfortable calling the project an actual engineering platform rather than an ambitious MCP toolset.**
+
+One small housekeeping point: the follow-up author commit is correctly attributed to `thedevbob005`, so that part is clean now.
+
+[View SEO Gravity MCP on GitHub](https://github.com/thedevbob005/seo-gravity-mcp?utm_source=chatgpt.com)

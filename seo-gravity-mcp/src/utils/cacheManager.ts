@@ -2,8 +2,19 @@ import * as crypto from 'crypto';
 
 export interface CacheEntry<T> {
   value: T;
+  cachedAt: string;
   expiresAt: number;
+  provider: string;
   hash: string;
+}
+
+export interface CacheMetadata {
+  isCached: boolean;
+  cachedAt: string;
+  ageMs: number;
+  ttlMs: number;
+  provider: string;
+  key: string;
 }
 
 export class CacheManager {
@@ -25,11 +36,34 @@ export class CacheManager {
     return entry.value as T;
   }
 
-  public set<T>(key: string, value: T, ttlMs = 300000): void {
+  public getWithMetadata<T>(key: string): { value: T; metadata: CacheMetadata } | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    const now = Date.now();
+    if (now > entry.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+    return {
+      value: entry.value as T,
+      metadata: {
+        isCached: true,
+        cachedAt: entry.cachedAt,
+        ageMs: now - new Date(entry.cachedAt).getTime(),
+        ttlMs: entry.expiresAt - now,
+        provider: entry.provider,
+        key
+      }
+    };
+  }
+
+  public set<T>(key: string, value: T, ttlMs = 300000, provider = 'internal'): void {
     const hash = crypto.createHash('md5').update(JSON.stringify(value)).digest('hex');
     this.cache.set(key, {
       value,
+      cachedAt: new Date().toISOString(),
       expiresAt: Date.now() + ttlMs,
+      provider,
       hash
     });
   }

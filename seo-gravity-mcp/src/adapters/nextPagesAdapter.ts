@@ -131,6 +131,24 @@ export class NextPagesAdapter implements FrameworkAdapter {
       }
     }
 
+    for (const r of routes) {
+      if (!r.isDynamic) continue;
+      const regexStr = '^' + r.routePath
+        .replace(/\[\.\.\.([a-zA-Z0-9_-]+)\]/g, '.*')
+        .replace(/\[([a-zA-Z0-9_-]+)\]/g, '[^/]+') + '$';
+      try {
+        if (new RegExp(regexStr).test(urlPath)) {
+          return {
+            urlPath,
+            matchedRoute: r,
+            sourceFilePath: r.sourceFilePath,
+            confidence: 0.95,
+            resolutionMethod: 'pattern_match'
+          };
+        }
+      } catch {}
+    }
+
     return {
       urlPath,
       confidence: 0.0,

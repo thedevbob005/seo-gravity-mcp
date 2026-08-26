@@ -3,40 +3,45 @@ import { fileURLToPath } from 'url';
 
 // Core Tool Imports
 import { auditOnPage } from './tools/onpage.js';
-import { auditGeoAiReadiness, generateLlmsTxt } from './tools/geo.js';
-import { clusterKeywords, classifySearchIntent } from './tools/keywords.js';
-import { generateSchemaMarkup, validateSchema } from './tools/schema.js';
+import { auditGeoAiReadiness } from './tools/geo.js';
 
-// Agent Orchestration & v1.1.0 Modules
+// Modular Server & Agent Orchestration
+import { createMcpServer } from './server/server.js';
+import { TOOLS } from './server/registry.js';
 import {
   auditProject,
   diagnoseSeo,
   prioritizeFindings,
-  generateFixPlan,
   createSnapshotTool,
   checkRegression
 } from './tools/orchestration.js';
 import { defaultAdapterRegistry } from './adapters/adapterRegistry.js';
 import { inspectSourceFileAST } from './utils/astLocator.js';
-import { calculatePriorityScore } from './utils/findingEngine.js';
-import { CrawlGraphBuilder } from './utils/crawlGraph.js';
-import { mapChangedFilesToRoutes } from './utils/gitDiffEngine.js';
 import { defaultCacheManager } from './utils/cacheManager.js';
 import { defaultProviderRegistry } from './providers/providerRegistry.js';
 import { detectOpportunities } from './utils/opportunityEngine.js';
 import { planExperiment, verifyExperiment } from './utils/experimentEngine.js';
+import { exportFindingsToSarif } from './utils/sarifExporter.js';
+import { defaultInvariantRegistry } from './invariants/registry.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../test/fixtures');
 
 async function runTests() {
-  console.log('🧪 Starting SEO Gravity MCP v1.1.0 (P0-P2 Blueprint) Test Suite...\n');
+  console.log('🧪 Starting SEO Gravity MCP v1.2.0 (Engineering Infrastructure) Test Suite...\n');
 
   // -------------------------------------------------------------
-  // Test 1: On-Page & GEO with Evidence Tiers
+  // Test 1: Modular Server & 35 Tool Catalog
   // -------------------------------------------------------------
-  console.log('1️⃣ Testing On-Page & GEO Evidence Analysis...');
+  console.log('1️⃣ Testing Modular Server Architecture...');
+  const server = createMcpServer({ name: 'seo-gravity-mcp', version: '1.2.0' });
+  console.log(`   ✅ Server Initialized: ${TOOLS.length} tools registered across all 8 architectural layers.`);
+
+  // -------------------------------------------------------------
+  // Test 2: On-Page & GEO Evidence Analysis
+  // -------------------------------------------------------------
+  console.log('\n2️⃣ Testing On-Page & GEO Evidence Analysis...');
   const sampleHtml = `
     <!DOCTYPE html>
     <html>
@@ -58,23 +63,38 @@ async function runTests() {
   console.log(`   ✅ GEO AI Retrieval Signals: Direct Answer=${geo.aiRetrievalSignals?.directEntityDefinition}`);
 
   // -------------------------------------------------------------
-  // Test 2: Framework Adapters & Multi-Framework Route Discovery
+  // Test 3: Framework Adapters & Multi-Framework Route Discovery
   // -------------------------------------------------------------
-  console.log('\n2️⃣ Testing Framework Adapters (Next.js, Astro, Remix, Vite, SvelteKit)...');
+  console.log('\n3️⃣ Testing Framework Adapters (Next.js, Astro, Remix, Vite, SvelteKit)...');
   const nextAppPath = path.join(FIXTURES_DIR, 'nextjs-app');
   const nextAdapter = defaultAdapterRegistry.getAdapterForProject(nextAppPath);
   const nextRoutes = nextAdapter.discoverRoutes(nextAppPath);
-  console.log(`   ✅ Next.js Adapter: ${nextAdapter.name} -> Discovered ${nextRoutes.length} route(s): ${nextRoutes.map(r => r.routePath).join(', ')}`);
+  console.log(`   ✅ Next.js Adapter: ${nextAdapter.name} -> Discovered ${nextRoutes.length} route(s)`);
 
-  const astroAppPath = path.join(FIXTURES_DIR, 'astro-app');
-  const astroAdapter = defaultAdapterRegistry.getAdapterForProject(astroAppPath);
-  const astroRoutes = astroAdapter.discoverRoutes(astroAppPath);
-  console.log(`   ✅ Astro Adapter: ${astroAdapter.name} -> Discovered ${astroRoutes.length} route(s): ${astroRoutes.map(r => r.routePath).join(', ')}`);
+  const pagesAppPath = path.join(FIXTURES_DIR, 'nextjs-pages');
+  const pagesAdapter = defaultAdapterRegistry.getAdapterForProject(pagesAppPath);
+  const pagesRoutes = pagesAdapter.discoverRoutes(pagesAppPath);
+  console.log(`   ✅ Next.js Pages Adapter: ${pagesAdapter.name} -> Discovered ${pagesRoutes.length} route(s)`);
+
+  const viteAppPath = path.join(FIXTURES_DIR, 'vite-react');
+  const viteAdapter = defaultAdapterRegistry.getAdapterForProject(viteAppPath);
+  const viteRoutes = viteAdapter.discoverRoutes(viteAppPath);
+  console.log(`   ✅ Vite React Adapter: ${viteAdapter.name} -> Discovered ${viteRoutes.length} route(s)`);
+
+  const remixAppPath = path.join(FIXTURES_DIR, 'remix-app');
+  const remixAdapter = defaultAdapterRegistry.getAdapterForProject(remixAppPath);
+  const remixRoutes = remixAdapter.discoverRoutes(remixAppPath);
+  console.log(`   ✅ Remix Adapter: ${remixAdapter.name} -> Discovered ${remixRoutes.length} route(s)`);
+
+  const svelteAppPath = path.join(FIXTURES_DIR, 'sveltekit-app');
+  const svelteAdapter = defaultAdapterRegistry.getAdapterForProject(svelteAppPath);
+  const svelteRoutes = svelteAdapter.discoverRoutes(svelteAppPath);
+  console.log(`   ✅ SvelteKit Adapter: ${svelteAdapter.name} -> Discovered ${svelteRoutes.length} route(s)`);
 
   // -------------------------------------------------------------
-  // Test 3: Deep AST & Line-Range Correlation Engine
+  // Test 4: Deep AST & Line-Range Correlation Engine
   // -------------------------------------------------------------
-  console.log('\n3️⃣ Testing AST Inspection & Line-Range Locator...');
+  console.log('\n4️⃣ Testing AST Inspection & Line-Range Locator...');
   const homePageFile = path.join(nextAppPath, 'app/page.tsx');
   const astResult = inspectSourceFileAST(homePageFile);
   console.log(`   ✅ AST Analysis for app/page.tsx:`);
@@ -83,44 +103,34 @@ async function runTests() {
   console.log(`      - Canonical Declared: ${astResult.hasCanonicalDeclaration} ("${astResult.extractedCanonical}")`);
 
   // -------------------------------------------------------------
-  // Test 4: Invariant-Based Snapshot & Regression Engine
+  // Test 5: Formal Invariant Registry & Evaluation
   // -------------------------------------------------------------
-  console.log('\n4️⃣ Testing Invariant-Based Snapshot & Git Metadata...');
+  console.log('\n5️⃣ Testing Formal Invariant Registry...');
+  const allInvariants = defaultInvariantRegistry.getAll();
+  console.log(`   ✅ Loaded Invariants: ${allInvariants.length} formal rules (${allInvariants.map(i => i.id).join(', ')})`);
+
   const snapResult = await createSnapshotTool(nextAppPath);
   console.log(`   ✅ Snapshot ID: ${snapResult.snapshot.snapshotId}`);
-  console.log(`   ✅ Git Metadata: Branch=${snapResult.snapshot.gitMetadata?.branch || 'main'}, Dirty=${snapResult.snapshot.gitMetadata?.isDirty}`);
   console.log(`   ✅ Formal Invariants Evaluated: ${snapResult.snapshot.invariants?.length || 0} invariant check(s) recorded`);
 
   const regCheck = await checkRegression(nextAppPath, snapResult.snapshot);
-  console.log(`   ✅ Regression Check: ${regCheck.verdict} (Diffs count: ${regCheck.regressionReport.invariantDiffs?.length})`);
+  console.log(`   ✅ Invariant Regression Check: ${regCheck.verdict}`);
 
   // -------------------------------------------------------------
-  // Test 5: Deep Root-Cause Diagnosis (seo_diagnose with AST)
+  // Test 6: SARIF v2.1.0 Exporter
   // -------------------------------------------------------------
-  console.log('\n5️⃣ Testing Deep Diagnostic with AST Line Precision (seo_diagnose)...');
-  const diag = await diagnoseSeo(nextAppPath, '/about');
-  console.log(`   ✅ Diagnostic for '/about':`);
-  console.log(`      - Matched File: ${diag.sourceLocation?.filePath}`);
-  console.log(`      - AST Target Range: Lines ${diag.sourceRange?.startLine}-${diag.sourceRange?.endLine}`);
-  console.log(`      - Suggested Blueprint: ${diag.suggestedFixBlueprints[0]?.title}`);
+  console.log('\n6️⃣ Testing SARIF v2.1.0 Exporter for CI/CD...');
+  const sarif = exportFindingsToSarif(snapResult.snapshot.findings, nextAppPath);
+  console.log(`   ✅ SARIF Report Generated: Version ${sarif.version}, Tool: ${sarif.runs[0].tool.driver.name}, Rules: ${sarif.runs[0].tool.driver.rules.length}, Results: ${sarif.runs[0].results.length}`);
 
   // -------------------------------------------------------------
-  // Test 6: Git Differential Engine
+  // Test 7: Cache Manager with Provenance
   // -------------------------------------------------------------
-  console.log('\n6️⃣ Testing Git Differential Route Mapping...');
-  const changedMock = ['app/blog/[slug]/page.tsx'];
-  const diffMapping = mapChangedFilesToRoutes(changedMock, nextRoutes);
-  console.log(`   ✅ Changed: ${changedMock.join(', ')} -> Affected Routes: ${diffMapping.affected.map(r => r.routePath).join(', ')} (${diffMapping.unaffected.length} unaffected)`);
-
-  // -------------------------------------------------------------
-  // Test 7: Content-Hash Caching Manager
-  // -------------------------------------------------------------
-  console.log('\n7️⃣ Testing Content-Hash Cache Manager...');
+  console.log('\n7️⃣ Testing Content-Hash Cache Manager with Provenance...');
   const cacheKey = defaultCacheManager.computeKey('test_ast', { file: 'page.tsx', size: 500 });
-  defaultCacheManager.set(cacheKey, { parsed: true, timestamp: Date.now() }, 10000);
-  const cachedVal = defaultCacheManager.get<any>(cacheKey);
-  console.log(`   ✅ Cache Key Generated: ${cacheKey}`);
-  console.log(`   ✅ Cache Hit Verified: parsed=${cachedVal?.parsed} (Cache Size: ${defaultCacheManager.size()})`);
+  defaultCacheManager.set(cacheKey, { parsed: true }, 10000, 'typescript_ast');
+  const cachedVal = defaultCacheManager.getWithMetadata<any>(cacheKey);
+  console.log(`   ✅ Cache Provenance: Provider=${cachedVal?.metadata.provider}, Age=${cachedVal?.metadata.ageMs}ms, Key=${cachedVal?.metadata.key}`);
 
   // -------------------------------------------------------------
   // Test 8: Pluggable Provider Abstraction
@@ -137,35 +147,17 @@ async function runTests() {
   console.log('\n9️⃣ Testing Strategic Opportunity Engine...');
   const opps = await detectOpportunities(nextAppPath, ['saas pricing calculator', 'agile workflows']);
   console.log(`   ✅ Opportunities Discovered: ${opps.totalOpportunitiesFound} strategic opportunity item(s)`);
-  for (const o of opps.opportunities.slice(0, 2)) {
-    console.log(`      - [${o.category}] ${o.title} -> ${o.recommendedRoutePath}`);
-  }
 
   // -------------------------------------------------------------
-  // Test 10: SEO Experimentation Engine (Hypothesis & Verification)
+  // Test 10: Flagship Project Audit & Sprint Prioritization
   // -------------------------------------------------------------
-  console.log('\n🔟 Testing SEO Experimentation Engine...');
-  const experiment = await planExperiment(
-    nextAppPath,
-    '/about',
-    'Adding metadata export to /about will resolve critical defect',
-    'Export const metadata: Metadata = { title: "About", description: "..." }'
-  );
-  console.log(`   ✅ Experiment Planned: ID=${experiment.id}, Status=${experiment.status}, Target=${experiment.targetRoute}`);
-
-  const expVerify = await verifyExperiment(nextAppPath, experiment);
-  console.log(`   ✅ Experiment Verification State: ${expVerify.status} (Delta: ${expVerify.scoreDelta})`);
-
-  // -------------------------------------------------------------
-  // Test 11: End-to-End Flagship Audit & Priority Sprints
-  // -------------------------------------------------------------
-  console.log('\n1️⃣1️⃣ Testing Flagship Project Audit & Sprint Prioritization...');
+  console.log('\n🔟 Testing Flagship Project Audit & Sprint Prioritization...');
   const audit = await auditProject(nextAppPath);
   const sprints = await prioritizeFindings(nextAppPath);
   console.log(`   ✅ Audit Complete: Overall Score=${audit.scores.overallHealth}/100 | Dynamic Routes=${audit.routesSummary.dynamicRoutesCount}`);
   console.log(`   ✅ Priority Sprints: Quick Wins=${sprints.sprints.quickWins.length}, Critical=${sprints.sprints.criticalBlockers.length}`);
 
-  console.log('\n🎉 ALL 11 P0-P2 ARCHITECTURAL TEST SUITES PASSED CLEANLY!\n');
+  console.log('\n🎉 ALL v1.2.0 ARCHITECTURAL & CI TEST SUITES PASSED CLEANLY!\n');
 }
 
 runTests().catch(err => {

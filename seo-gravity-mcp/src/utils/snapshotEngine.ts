@@ -16,6 +16,7 @@ import {
   generateCodeFixSnippet
 } from './findingEngine.js';
 import { inspectSourceFileAST } from './astLocator.js';
+import { defaultInvariantRegistry } from '../invariants/registry.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -101,21 +102,53 @@ export async function createProjectSnapshot(
     }
   });
 
-  invariants.push({
-    id: 'INVARIANT_ROBOTS_ALLOWED',
-    logicalPageId: 'site_root',
-    url: '/robots.txt',
-    description: 'Robots configuration exists and allows crawlability',
-    expectedCondition: 'robots.txt configuration present',
-    observedCondition: robotsFile ? `Found ${robotsFile}` : 'robots.txt missing',
-    satisfied: Boolean(robotsFile),
-    provenance: {
+  const robotsInv = defaultInvariantRegistry.evaluateContext(
+    'INV-ROBOTS-ALLOWED',
+    {
+      url: '/robots.txt',
+      logicalPageId: 'site_root',
+      hasRobots: Boolean(robotsFile)
+    },
+    {
       analyzer: adapter.id,
       source: 'robots_txt',
       timestamp: now,
       provider: 'filesystem'
     }
-  });
+  );
+  if (robotsInv) invariants.push(robotsInv);
+
+  const sitemapInv = defaultInvariantRegistry.evaluateContext(
+    'INV-SITEMAP-PRESENT',
+    {
+      url: '/sitemap.xml',
+      logicalPageId: 'site_root',
+      hasSitemap: Boolean(sitemapFile)
+    },
+    {
+      analyzer: adapter.id,
+      source: 'sitemap_xml',
+      timestamp: now,
+      provider: 'filesystem'
+    }
+  );
+  if (sitemapInv) invariants.push(sitemapInv);
+
+  const llmsInv = defaultInvariantRegistry.evaluateContext(
+    'INV-LLMS-TXT',
+    {
+      url: '/llms.txt',
+      logicalPageId: 'site_root',
+      hasLlmsTxt: Boolean(llmsFile)
+    },
+    {
+      analyzer: adapter.id,
+      source: 'static_analysis',
+      timestamp: now,
+      provider: 'filesystem'
+    }
+  );
+  if (llmsInv) invariants.push(llmsInv);
 
   if (!sitemapFile) {
     findings.push(
@@ -191,39 +224,41 @@ export async function createProjectSnapshot(
 
       // Metadata invariant
       const hasMeta = ast.hasMetadataExport || ast.hasGenerateMetadata || route.hasHeadComponent;
-      invariants.push({
-        id: 'INVARIANT_TITLE_PRESENT',
-        logicalPageId: pageId,
-        url: route.routePath,
-        description: `Page '${route.routePath}' declares title and description metadata`,
-        expectedCondition: 'Metadata declaration present',
-        observedCondition: hasMeta ? 'Metadata present' : 'Metadata missing',
-        satisfied: hasMeta,
-        provenance: {
+      const titleInv = defaultInvariantRegistry.evaluateContext(
+        'INV-TITLE-PRESENT',
+        {
+          url: route.routePath,
+          logicalPageId: pageId,
+          hasMetadata: hasMeta,
+          extractedTitle: ast.extractedTitle
+        },
+        {
           analyzer: 'astLocator',
           source: 'ast_inspection',
           timestamp: now,
           provider: 'typescript_ast'
         }
-      });
+      );
+      if (titleInv) invariants.push(titleInv);
 
       // Canonical invariant
       const hasCanonical = ast.hasCanonicalDeclaration;
-      invariants.push({
-        id: 'INVARIANT_CANONICAL_PRESENT',
-        logicalPageId: pageId,
-        url: route.routePath,
-        description: `Page '${route.routePath}' declares canonical URL`,
-        expectedCondition: 'Canonical URL declaration present',
-        observedCondition: hasCanonical ? 'Canonical tag present' : 'Canonical tag missing',
-        satisfied: hasCanonical,
-        provenance: {
+      const canonicalInv = defaultInvariantRegistry.evaluateContext(
+        'INV-CANONICAL-RESOLVES',
+        {
+          url: route.routePath,
+          logicalPageId: pageId,
+          hasCanonical,
+          extractedCanonical: ast.extractedCanonical
+        },
+        {
           analyzer: 'astLocator',
           source: 'ast_inspection',
           timestamp: now,
           provider: 'typescript_ast'
         }
-      });
+      );
+      if (canonicalInv) invariants.push(canonicalInv);
 
       // Check for missing metadata finding
       if (!hasMeta) {
