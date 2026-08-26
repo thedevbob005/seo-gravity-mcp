@@ -34,7 +34,7 @@ export const PolicyConfigSchema = z.object({
 
 export class PolicyLoader {
   public static resolvePolicy(projectDir: string = '.', explicitPath?: string): PolicyConfig {
-    let rawConfig: any = null;
+    let rawConfig: unknown = null;
 
     if (explicitPath && fs.existsSync(explicitPath)) {
       rawConfig = this.parseConfigFile(explicitPath);
@@ -54,74 +54,98 @@ export class PolicyLoader {
       }
     }
 
-    const baseProfileName: PolicyProfileName = (rawConfig?.profile as PolicyProfileName) || 'balanced';
-    const baseProfile = BUILTIN_PROFILES[baseProfileName] || BUILTIN_PROFILES.balanced;
-
     if (!rawConfig) {
-      return baseProfile;
+      return BUILTIN_PROFILES.balanced;
     }
 
-    // Normalize snake_case regression options to camelCase
-    const rawReg = rawConfig.regression || {};
+    const parsed = PolicyConfigSchema.safeParse(rawConfig);
+    if (!parsed.success) {
+      const details = parsed.error.issues
+        .map(issue => `${issue.path.join('.') || '<root>'}: ${issue.message}`)
+        .join('; ');
+      throw new Error(`Invalid SEO Gravity policy configuration: ${details}`);
+    }
+
+    const config = parsed.data;
+    const baseProfileName: PolicyProfileName = config.profile || 'balanced';
+    const baseProfile = BUILTIN_PROFILES[baseProfileName];
+
+    if (!baseProfile) {
+      throw new Error(`Unknown SEO Gravity policy profile: '${baseProfileName}'.`);
+    }
+
+    const rawReg = config.regression || {};
     const normalizedRegression = {
       ...baseProfile.regression,
-      failOnLevels: rawReg.failOnLevels || rawReg.fail_on_levels || baseProfile.regression?.failOnLevels,
-      failOnSeverities: rawReg.failOnSeverities || rawReg.fail_on_severities || baseProfile.regression?.failOnSeverities,
-      allowExpectedChanges: rawReg.allowExpectedChanges ?? rawReg.allow_expected_changes ?? baseProfile.regression?.allowExpectedChanges,
-      maxAllowedRegressions: rawReg.maxAllowedRegressions ?? rawReg.max_allowed_regressions ?? baseProfile.regression?.maxAllowedRegressions
+      failOnLevels: rawReg.failOnLevels || baseProfile.regression?.failOnLevels,
+      failOnSeverities: rawReg.failOnSeverities || baseProfile.regression?.failOnSeverities,
+      allowExpectedChanges: rawReg.allowExpectedChanges ?? baseProfile.regression?.allowExpectedChanges,
+      maxAllowedRegressions: rawReg.maxAllowedRegressions ?? baseProfile.regression?.maxAllowedRegressions
     };
 
-    // Normalize invariant policy overrides
     const mergedInvariants: Record<string, InvariantPolicyOverride> = {
       ...baseProfile.invariants,
-      ...(rawConfig.invariants || {})
+      ...(config.invariants || {})
     };
 
-    // Support convenient high-level policy shortcuts (e.g. policy: { canonical: required, sitemap: recommended })
-    const rawPolicy = rawConfig.policy || {};
-    if (rawPolicy.canonical) {
-      const lvl = String(rawPolicy.canonical).toUpperCase() as RequirementLevel;
+    const rawPolicy = config.policy || {};
+    if (rawPolicy.canonical !== undefined) {
+      const parsedLevel = String(rawPolicy.canonical).toUpperCase();
+      if (!['REQUIRED', 'CONDITIONAL', 'RECOMMENDED', 'OPTIONAL'].includes(parsedLevel)) {
+        throw new Error(`Invalid policy.canonical requirement level: '${rawPolicy.canonical}'.`);
+      }
+      const lvl = parsedLevel as RequirementLevel;
       mergedInvariants['INV-CANONICAL-RESOLVES'] = { requirementLevel: lvl, severity: 'high', enabled: true };
     }
-    if (rawPolicy.sitemap) {
-      const lvl = String(rawPolicy.sitemap).toUpperCase() as RequirementLevel;
+    if (rawPolicy.sitemap !== undefined) {
+      const parsedLevel = String(rawPolicy.sitemap).toUpperCase();
+      if (!['REQUIRED', 'CONDITIONAL', 'RECOMMENDED', 'OPTIONAL'].includes(parsedLevel)) {
+        throw new Error(`Invalid policy.sitemap requirement level: '${rawPolicy.sitemap}'.`);
+      }
+      const lvl = parsedLevel as RequirementLevel;
       mergedInvariants['INV-SITEMAP-PRESENT'] = { requirementLevel: lvl, severity: 'medium', enabled: true };
     }
-    if (rawPolicy.llms_txt || rawPolicy.llmsTxt) {
-      const lvl = String(rawPolicy.llms_txt || rawPolicy.llmsTxt).toUpperCase() as RequirementLevel;
+    if (rawPolicy.llms_txt !== undefined || rawPolicy.llmsTxt !== undefined) {
+      const rawLevel = rawPolicy.llms_txt ?? rawPolicy.llmsTxt;
+      const parsedLevel = String(rawLevel).toUpperCase();
+      if (!['REQUIRED', 'CONDITIONAL', 'RECOMMENDED', 'OPTIONAL'].includes(parsedLevel)) {
+        throw new Error(`Invalid policy.llms_txt requirement level: '${rawLevel}'.`);
+      }
+      const lvl = parsedLevel as RequirementLevel;
       mergedInvariants['INV-LLMS-TXT'] = { requirementLevel: lvl, severity: 'low', enabled: true };
     }
 
-    const merged: PolicyConfig = {
-      version: rawConfig.version || baseProfile.version,
+    return {
+      version: config.version || baseProfile.version,
       profile: baseProfileName,
       regression: normalizedRegression,
       invariants: mergedInvariants,
-      framework: rawConfig.framework
+      framework: config.framework
     };
-
-    return merged;
   }
 
-  public static parseConfigFile(filePath: string): any {
-    try {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      if (filePath.endsWith('.json')) {
+  public static parseConfigFile(filePath: string): unknown {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    if (filePath.endsWith('.json')) {
+      try {
         return JSON.parse(content);
+      } catch (err) {
+        throw new Error(`Invalid JSON policy configuration '${filePath}': ${err instanceof Error ? err.message : String(err)}`);
       }
+    }
+    try {
       return this.parseYaml(content);
-    } catch {
-      return null;
+    } catch (err) {
+      throw new Error(`Invalid YAML policy configuration '${filePath}': ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  public static parseYaml(content: string): Record<string, any> {
-    try {
-      const parsed = YAML.parse(content);
-      return (typeof parsed === 'object' && parsed !== null) ? parsed : {};
-    } catch {
-      return {};
+  public static parseYaml(content: string): Record<string, unknown> {
+    const parsed = YAML.parse(content);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new Error('Policy YAML root must be an object.');
     }
+    return parsed as Record<string, unknown>;
   }
 
   public static isRegressionBreachingPolicy(
@@ -136,7 +160,7 @@ export class PolicyLoader {
 
     const invOverride = policy.invariants?.[diff.invariantId];
     if (invOverride && invOverride.enabled === false) {
-      return false; // Explicitly disabled by project policy
+      return false;
     }
 
     const level = invOverride?.requirementLevel || diff.requirementLevel || 'REQUIRED';
@@ -145,10 +169,7 @@ export class PolicyLoader {
     const failLevels = policy.regression?.failOnLevels || ['REQUIRED', 'CONDITIONAL'];
     const failSeverities = policy.regression?.failOnSeverities || ['critical', 'high'];
 
-    const levelBreached = failLevels.includes(level as any);
-    const severityBreached = failSeverities.includes(severity as any);
-
-    return levelBreached && severityBreached;
+    return failLevels.includes(level as any) && failSeverities.includes(severity as any);
   }
 
   public static evaluatePolicyGate(
@@ -164,18 +185,11 @@ export class PolicyLoader {
     const breachingDiffs = diffs.filter(d => this.isRegressionBreachingPolicy(d, policy));
     const totalBreaches = breachingDiffs.length;
     const maxAllowed = policy.regression?.maxAllowedRegressions ?? 0;
-
     const pass = totalBreaches <= maxAllowed;
     const verdict = pass
       ? `✅ PASSED (Policy: ${policy.profile}): ${totalBreaches} breach(es) within allowed threshold (max: ${maxAllowed}).`
       : `🚨 FAILED (Policy: ${policy.profile}): ${totalBreaches} invariant regression(s) breached policy (max allowed: ${maxAllowed}).`;
 
-    return {
-      pass,
-      breachingDiffs,
-      totalBreaches,
-      maxAllowed,
-      verdict
-    };
+    return { pass, breachingDiffs, totalBreaches, maxAllowed, verdict };
   }
 }
