@@ -1,4 +1,4 @@
-# 🚀 SEO Gravity (v1.2.0)
+# 🚀 SEO Gravity (v1.2.1)
 
 <div align="center">
 
@@ -7,12 +7,13 @@
 ![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blue?style=for-the-badge&logo=anthropic)
 ![SARIF Ready](https://img.shields.io/badge/SARIF-GitHub_Code_Scanning-success?style=for-the-badge)
 ![CLI Ready](https://img.shields.io/badge/CLI-CI%2FCD_Ready-success?style=for-the-badge)
+![17 Frameworks](https://img.shields.io/badge/Frameworks-17_Supported-blueviolet?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Zero API Cost](https://img.shields.io/badge/Zero_API_Cost-100%25_Free-orange?style=for-the-badge)
 
 **The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.**
 
-[⚡ Instant Start](#-instant-start) • [💻 CLI & CI/CD](#-command-line--cicd-runner) • [🛡️ Invariant Truth Layer](#-formal-seo-invariant-registry) • [🏛 5-Layer Architecture](#-5-layer-system-architecture) • [🧩 Framework Adapters](#-modular-framework-adapters) • [🛠 Tool Catalog (35 Tools)](#-complete-tool-catalog) • [📄 License](#-license)
+[⚡ Instant Start](#-instant-start) • [💻 CLI & CI/CD](#-command-line--cicd-runner) • [🛡️ Invariant Truth Layer](#-formal-seo-invariant-registry) • [🏛 5-Layer Architecture](#-5-layer-system-architecture) • [🧩 17 Framework Adapters](#-17-modular-framework-adapters--benchmark) • [🛠 Tool Catalog (35 Tools)](#-complete-tool-catalog) • [📄 License](#-license)
 
 </div>
 
@@ -22,12 +23,12 @@
 
 **SEO Gravity** is an **SEO engineering infrastructure layer** designed specifically for AI coding agents (Antigravity, Cursor, Claude Code, Windsurf, Cline, Roo Code) and automated CI/CD pipelines.
 
-Instead of operating as a passive reporting tool, SEO Gravity connects **rendered web observations** directly to **source code AST nodes and line numbers** across modern web frameworks (Next.js App/Pages Router, Astro, Vite/React, Remix, SvelteKit), generates actionable code fix blueprints, and enforces invariant-based regression checks.
+Instead of operating as a passive reporting tool, SEO Gravity connects **rendered web observations** directly to **source code AST nodes, templates, and line numbers** across **17 modern web frameworks, full-stack backend architectures, and CMS ecosystems** (Next.js, WordPress, Laravel, Symfony, Astro, Vite, Remix, SvelteKit, Nuxt 3, TanStack Start, SolidStart, Qwik City, Gatsby, and Markdown SSGs), generates actionable code fix blueprints, and enforces invariant-based regression checks.
 
 ```text
  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
  │ 1. DISCOVER  │ ──▶ │  2. OBSERVE  │ ──▶ │ 3. DIAGNOSE  │ ──▶ │    4. FIX    │ ──▶ │  5. VERIFY   │
- │ Framework    │     │ Live/Dev SSR │     │ AST Line Nos │     │ AI Modifies  │     │ Invariant    │
+ │ 17 Framework │     │ Live/Dev SSR │     │ AST Line Nos │     │ AI Modifies  │     │ Invariant    │
  │ Adapters     │     │ Crawl Graph  │     │ Prioritized  │     │ Components   │     │ Regression   │
  │ Source Map   │     │ Provenance   │     │ Action Plan  │     │ Snippets     │     │ Git Stamping │
  └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
@@ -52,7 +53,7 @@ Instead of operating as a passive reporting tool, SEO Gravity connects **rendere
 │    Observations ≠ Findings; AST inspection, headers, DOM    │
 ├─────────────────────────────────────────────────────────────┤
 │ 5. PROVIDER & ADAPTER LAYER                                 │
-│    Framework Adapters (Next, Astro, Vite), Providers, Cache │
+│    17 Framework Adapters (JS/TS/PHP/SSG), Providers, Cache  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -74,19 +75,29 @@ SEO Gravity enforces strict **semantic invariants** rather than heuristic score 
 
 ---
 
-## 🧩 Modular Framework Adapters & Benchmark
+## 🧩 17 Modular Framework Adapters & Benchmark
 
-Tested with **100% correlation accuracy** across 7 web application frameworks:
+Tested with **100% correlation accuracy** across 17 web application frameworks and CMS ecosystems:
 
-| Framework Adapter | Detection | Route Discovery | AST Inspection | Benchmark |
+| Category | Framework Adapter | Detection Signature | Routing & Template Model | Benchmark |
 | :--- | :--- | :--- | :--- | :---: |
-| **`NextAppAdapter`** | `next` + `app/` | App Router hierarchy, route groups `(group)`, dynamic `[slug]` | Pinpoints `metadata` export & `generateMetadata()` lines | **100%** |
-| **`NextPagesAdapter`** | `next` + `pages/` | Pages router hierarchy, dynamic `[id]` | Scans `<Head>` & `<NextSeo>` JSX components | **100%** |
-| **`AstroAdapter`** | `astro` + `src/pages` | `.astro`, `.md`, `.mdx` pages | Scans Astro frontmatter & `<title>` tags | **100%** |
-| **`ViteReactAdapter`** | `vite` / `react` | `index.html` + React Router routes | Scans `<Helmet>` & route definition trees | **100%** |
-| **`RemixAdapter`** | `@remix-run/react` | `app/routes/` | Inspects `meta` and `links` export functions | **100%** |
-| **`SvelteKitAdapter`** | `@sveltejs/kit` | `src/routes/` (`+page.svelte`) | Scans `<svelte:head>` components | **100%** |
-| **`StaticAdapter`** | Static HTML files | Recursive HTML directory traversal | Direct DOM / meta element inspection | **100%** |
+| **JS / TS SSR** | **`NextAppAdapter`** | `next` + `app/` | App Router hierarchy, route groups `(group)`, dynamic `[slug]` | **100%** |
+| **JS / TS SSR** | **`NextPagesAdapter`** | `next` + `pages/` | Pages router hierarchy, dynamic `[id]` | **100%** |
+| **JS / TS SSR** | **`AstroAdapter`** | `astro` + `src/pages` | `.astro`, `.md`, `.mdx` pages | **100%** |
+| **JS / TS SSR** | **`RemixAdapter`** | `@remix-run/react` | Flat routes `app/routes/`, index `_index.tsx`, dynamic `$slug` | **100%** |
+| **JS / TS SSR** | **`SvelteKitAdapter`** | `@sveltejs/kit` | `src/routes/` (`+page.svelte`), dynamic `[slug]` | **100%** |
+| **JS / TS SSR** | **`NuxtAdapter`** | `nuxt` in `package.json` | `pages/**/*.vue` with `useHead()`, `useSeoMeta()` | **100%** |
+| **JS / TS SSR** | **`TanStackRouterAdapter`** | `@tanstack/react-router` | `src/routes/` with `createFileRoute` & `head()` | **100%** |
+| **JS / TS SSR** | **`SolidStartAdapter`** | `@solidjs/start` | `src/routes/` with `<Title>`, `<Meta>`, `<Link>` | **100%** |
+| **JS / TS SSR** | **`QwikCityAdapter`** | `@builder.io/qwik-city` | `src/routes/**/index.tsx` with `DocumentHead` | **100%** |
+| **JS / TS SSG** | **`GatsbyAdapter`** | `gatsby` in `package.json` | `src/pages/` with `export const Head` | **100%** |
+| **PHP / CMS** | **`WordPressAdapter`** | `style.css` / `wp-content` | Classic templates (`front-page.php`, `single.php`) & FSE block templates | **100%** |
+| **PHP Fullstack** | **`LaravelAdapter`** | `artisan` / `laravel/framework` | `routes/web.php` + Blade templates (`@section('title')`) | **100%** |
+| **PHP Fullstack** | **`SymfonyAdapter`** | `symfony.lock` / `composer.json` | `config/routes.yaml` / `#[Route]` + Twig templates (`{% block title %}`) | **100%** |
+| **PHP Classic** | **`PhpClassicAdapter`** | `*.php` files | File-based routing (`index.php`, `about.php`) | **100%** |
+| **Markdown SSG** | **`SsgAdapter`** | `hugo.toml`, `_config.yml`, `11ty` | `content/**/*.md`, `_posts/**/*.md` YAML/TOML frontmatter | **100%** |
+| **React SPA** | **`ViteReactAdapter`** | `vite` + `react` | `index.html` + React Router route trees | **100%** |
+| **Static HTML** | **`StaticAdapter`** | Static `.html` files | Recursive HTML directory traversal | **100%** |
 
 ---
 

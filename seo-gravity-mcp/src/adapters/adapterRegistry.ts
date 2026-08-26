@@ -2,20 +2,47 @@ import { FrameworkAdapter } from './types.js';
 import { NextAppAdapter } from './nextAppAdapter.js';
 import { NextPagesAdapter } from './nextPagesAdapter.js';
 import { AstroAdapter } from './astroAdapter.js';
-import { ViteReactAdapter } from './viteReactAdapter.js';
 import { RemixAdapter } from './remixAdapter.js';
 import { SvelteKitAdapter } from './svelteKitAdapter.js';
+import { NuxtAdapter } from './nuxtAdapter.js';
+import { TanStackRouterAdapter } from './tanStackRouterAdapter.js';
+import { SolidStartAdapter } from './solidStartAdapter.js';
+import { QwikCityAdapter } from './qwikCityAdapter.js';
+import { GatsbyAdapter } from './gatsbyAdapter.js';
+import { WordPressAdapter } from './wordpressAdapter.js';
+import { LaravelAdapter } from './laravelAdapter.js';
+import { SymfonyAdapter } from './symfonyAdapter.js';
+import { PhpClassicAdapter } from './phpClassicAdapter.js';
+import { SsgAdapter } from './ssgAdapter.js';
+import { ViteReactAdapter } from './viteReactAdapter.js';
 import { StaticAdapter } from './staticAdapter.js';
 
 export class AdapterRegistry {
   private adapters: FrameworkAdapter[] = [
+    // Specialized JS/TS Frameworks
     new NextAppAdapter(),
     new NextPagesAdapter(),
     new AstroAdapter(),
     new RemixAdapter(),
     new SvelteKitAdapter(),
+    new NuxtAdapter(),
+    new TanStackRouterAdapter(),
+    new SolidStartAdapter(),
+    new QwikCityAdapter(),
+    new GatsbyAdapter(),
+
+    // PHP & CMS Frameworks
+    new WordPressAdapter(),
+    new LaravelAdapter(),
+    new SymfonyAdapter(),
+    new PhpClassicAdapter(),
+
+    // Static Site Generators & SPAs
+    new SsgAdapter(),
     new ViteReactAdapter(),
-    new StaticAdapter() // fallback
+
+    // Universal Fallback
+    new StaticAdapter()
   ];
 
   public getAdapterForProject(projectDir: string): FrameworkAdapter {
@@ -29,6 +56,10 @@ export class AdapterRegistry {
 
   public getAdapterById(id: string): FrameworkAdapter | undefined {
     return this.adapters.find(a => a.id === id);
+  }
+
+  public getAllAdapters(): FrameworkAdapter[] {
+    return [...this.adapters];
   }
 }
 

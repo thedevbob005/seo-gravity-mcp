@@ -114,6 +114,15 @@ export type SupportedFramework =
   | 'vite-react'
   | 'sveltekit'
   | 'nuxt'
+  | 'tanstack-start'
+  | 'solidstart'
+  | 'qwik-city'
+  | 'gatsby'
+  | 'wordpress'
+  | 'laravel'
+  | 'symfony'
+  | 'php-classic'
+  | 'ssg-markdown'
   | 'static-html'
   | 'unknown';
 

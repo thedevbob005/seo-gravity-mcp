@@ -1,6 +1,6 @@
 {
   "name": "seo-gravity-mcp",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "SEO Engineering Infrastructure Layer for AI Coding Agents and CI/CD Pipelines",
   "main": "dist/index.js",
   "type": "module",

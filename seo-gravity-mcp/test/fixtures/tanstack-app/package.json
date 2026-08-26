@@ -1,0 +1,8 @@
+{
+  "name": "fixture-tanstack-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "@tanstack/react-router": "^1.25.0",
+    "react": "^18.3.0"
+  }
+}

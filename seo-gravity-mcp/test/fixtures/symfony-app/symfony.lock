@@ -1,0 +1,5 @@
+{
+  "symfony/framework-bundle": {
+    "version": "v7.0.0"
+  }
+}
