@@ -1,4 +1,4 @@
-# 🚀 SEO Gravity (v1.3.2)
+# 🚀 SEO Gravity (v1.3.3)
 
 <div align="center">
 
@@ -11,7 +11,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Zero API Cost](https://img.shields.io/badge/Zero_API_Cost-100%25_Free-orange?style=for-the-badge)
 
-**The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.**
+**The SEO Engineering Infrastructure Layer for AI Coding Agents and CI/CD Quality Gates.**
 
 [⚡ Instant Start](#-instant-start) • [💻 CLI & CI/CD](#-command-line--cicd-runner) • [🛡️ Invariant Truth & Policy](#-formal-seo-invariant-registry--policy-engine) • [🏛 5-Layer Architecture](#-5-layer-system-architecture) • [🧩 17 Framework Adapters](#-17-modular-framework-adapters--benchmark) • [🛠 Tool Catalog (35 Tools)](#-complete-tool-catalog) • [📄 License](#-license)
 

@@ -397,17 +397,12 @@ export async function checkRegression(
   const report = await compareSnapshotsTool(baselineSnapshot, currentSnapshot);
 
   const invariantDiffs = report.invariantDiffs || [];
-  const policyBreaches = invariantDiffs.filter(d => PolicyLoader.isRegressionBreachingPolicy(d, policy));
-
-  const pass = policyBreaches.length === 0;
-  const verdict = pass
-    ? `✅ PASSED (Policy: ${policy.profile}): No policy-breaching SEO invariant regressions detected.`
-    : `🚨 FAILED (Policy: ${policy.profile}): ${policyBreaches.length} invariant regression(s) breached policy thresholds.`;
+  const gateResult = PolicyLoader.evaluatePolicyGate(invariantDiffs, policy);
 
   return {
     schemaVersion: 'seo.gravity/v1',
-    pass,
-    verdict,
+    pass: gateResult.pass,
+    verdict: gateResult.verdict,
     policyProfile: policy.profile,
     regressionReport: report
   };

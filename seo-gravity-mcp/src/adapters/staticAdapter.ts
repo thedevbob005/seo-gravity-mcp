@@ -16,8 +16,9 @@ export class StaticAdapter implements FrameworkAdapter {
   public id = 'static-html';
   public name = 'Static HTML / Web Application';
 
-  public detect(_projectDir: string): boolean {
-    return true; // Fallback
+  public detect(projectDir: string): boolean {
+    return fs.existsSync(path.join(projectDir, 'index.html')) ||
+           fs.existsSync(path.join(projectDir, 'public/index.html'));
   }
 
   public getProjectInfo(projectDir: string): ProjectFrameworkInfo {

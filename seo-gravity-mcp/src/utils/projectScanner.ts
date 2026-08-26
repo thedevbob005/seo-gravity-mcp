@@ -18,9 +18,11 @@ export function detectFramework(projectDir: string): ProjectFrameworkInfo {
   return adapter.getProjectInfo(resolvedDir);
 }
 
-export function discoverRoutes(projectDir: string, _frameworkInfo?: ProjectFrameworkInfo): DiscoveredRoute[] {
+export function discoverRoutes(projectDir: string, frameworkInfo?: ProjectFrameworkInfo): DiscoveredRoute[] {
   const resolvedDir = path.resolve(projectDir);
-  const adapter = defaultAdapterRegistry.getAdapterForProject(resolvedDir);
+  const adapter = frameworkInfo?.framework
+    ? (defaultAdapterRegistry.getAdapterById(frameworkInfo.framework) || defaultAdapterRegistry.getAdapterForProject(resolvedDir))
+    : defaultAdapterRegistry.getAdapterForProject(resolvedDir);
   return adapter.discoverRoutes(resolvedDir);
 }
 

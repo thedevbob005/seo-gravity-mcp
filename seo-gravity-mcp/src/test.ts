@@ -21,6 +21,7 @@ import { BUILTIN_PROFILES } from './policy/profiles.js';
 import { formatPrCommentMarkdown } from './utils/prCommentFormatter.js';
 import { analyzeSemanticFileChange } from './utils/gitDiffEngine.js';
 import { compareSnapshots } from './utils/snapshotEngine.js';
+import { InvariantDiffItem } from './types/canonical.js';
 import { VERSION, PACKAGE_NAME } from './version.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -76,7 +77,7 @@ regression:
   fail_on_levels: [REQUIRED, CONDITIONAL, RECOMMENDED]
   fail_on_severities: [critical, high, medium]
   allow_expected_changes: false
-  max_allowed_regressions: 0
+  max_allowed_regressions: 2
 `;
   const parsedYaml = PolicyLoader.parseYaml(mockYaml);
   assert.equal(parsedYaml.version, 1);
@@ -98,7 +99,7 @@ regression:
     createdAt: new Date().toISOString(),
     projectPath: '.',
     frameworkInfo: { framework: 'nextjs-app-router', name: 'Next.js', version: '14.0.0', confidence: 1.0 },
-    discoveredRoutes: [],
+    discoveredRoutes: [{ routePath: '/deleted-route', routeType: 'page', sourceFilePath: 'app/deleted/page.tsx', hasHeadComponent: false }],
     scores: { overallHealth: 100, overallConfidence: 'High', totalEvidenceSignals: 10, technical: { score: 100, state: 'healthy' }, content: { score: 100, state: 'healthy' }, discoverability: { score: 100, state: 'healthy' }, authority: { score: 100, state: 'healthy' }, entity: { score: 100, state: 'healthy' }, performance: { score: 100, state: 'healthy' }, aiReadiness: { score: 100, state: 'healthy' } },
     findings: [],
     invariants: [
@@ -107,21 +108,96 @@ regression:
     routeMappings: []
   };
 
-  const fakeCurrent: any = {
+  const fakeCurrentActiveRouteMissingEvidence: any = {
     ...fakeBaseline,
     snapshotId: 'snap_curr',
-    invariants: [] // Invariant disappeared!
+    discoveredRoutes: [{ routePath: '/deleted-route', routeType: 'page', sourceFilePath: 'app/deleted/page.tsx', hasHeadComponent: false }],
+    invariants: [] // Active route missing invariant evidence
   };
 
-  const diffReport = compareSnapshots(fakeBaseline, fakeCurrent);
-  assert.equal(diffReport.invariantDiffs?.length, 1);
-  assert.equal(diffReport.invariantDiffs![0].status, 'NEW_REGRESSION', 'Disappearing satisfied invariant must trigger regression');
-  console.log('   ✅ Invariant Union Diffing: Disappearing satisfied invariant correctly flagged as NEW_REGRESSION.');
+  const diffReport1 = compareSnapshots(fakeBaseline, fakeCurrentActiveRouteMissingEvidence);
+  assert.equal(diffReport1.invariantDiffs?.length, 1);
+  assert.equal(diffReport1.invariantDiffs![0].status, 'NEW_REGRESSION', 'Disappearing satisfied invariant on active route must trigger regression');
+
+  const fakeCurrentRouteDeleted: any = {
+    ...fakeBaseline,
+    snapshotId: 'snap_curr',
+    discoveredRoutes: [], // Route intentionally removed from project
+    invariants: []
+  };
+
+  const diffReport2 = compareSnapshots(fakeBaseline, fakeCurrentRouteDeleted);
+  assert.equal(diffReport2.invariantDiffs?.length, 1);
+  assert.equal(diffReport2.invariantDiffs![0].status, 'EXPECTED_CHANGE', 'Disappearing invariant for removed route must be tagged EXPECTED_CHANGE');
+  console.log('   ✅ Invariant Union Diffing: Active route missing evidence -> NEW_REGRESSION; Deleted route -> EXPECTED_CHANGE.');
 
   // -------------------------------------------------------------
-  // Test 5: Semantic SEO Diff & Risk Assessment (P1)
+  // Test 5: Policy-Matrix Evaluation
   // -------------------------------------------------------------
-  console.log('\n5️⃣ Testing Semantic SEO Git Diff Engine...');
+  console.log('\n5️⃣ Testing Policy Matrix Evaluation Across Profiles & Thresholds...');
+  const lowRecDiff: InvariantDiffItem = {
+    invariantId: 'INV-LLMS-TXT',
+    logicalPageId: 'site_root',
+    url: '/llms.txt',
+    status: 'NEW_REGRESSION',
+    baselineSatisfied: true,
+    currentSatisfied: false,
+    requirementLevel: 'RECOMMENDED',
+    severity: 'low',
+    message: 'llms.txt missing'
+  };
+
+  const criticalReqDiff: InvariantDiffItem = {
+    invariantId: 'INV-HTTP-200',
+    logicalPageId: 'page_home',
+    url: '/',
+    status: 'NEW_REGRESSION',
+    baselineSatisfied: true,
+    currentSatisfied: false,
+    requirementLevel: 'REQUIRED',
+    severity: 'critical',
+    message: 'HTTP 500 error'
+  };
+
+  // Profile strict fails on RECOMMENDED + low
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(lowRecDiff, BUILTIN_PROFILES.strict), true);
+  // Profile balanced ignores RECOMMENDED + low
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(lowRecDiff, BUILTIN_PROFILES.balanced), false);
+  // Profile startup ignores RECOMMENDED + low
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(lowRecDiff, BUILTIN_PROFILES.startup), false);
+
+  // All profiles fail on REQUIRED + critical
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(criticalReqDiff, BUILTIN_PROFILES.strict), true);
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(criticalReqDiff, BUILTIN_PROFILES.balanced), true);
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(criticalReqDiff, BUILTIN_PROFILES.startup), true);
+
+  // Invariant override: disabled policy
+  const customPolicy = {
+    ...BUILTIN_PROFILES.strict,
+    invariants: {
+      'INV-HTTP-200': { enabled: false }
+    }
+  };
+  assert.equal(PolicyLoader.isRegressionBreachingPolicy(criticalReqDiff, customPolicy), false);
+
+  // Gate evaluation with maxAllowedRegressions
+  const gatePolicy = {
+    ...BUILTIN_PROFILES.strict,
+    regression: {
+      ...BUILTIN_PROFILES.strict.regression,
+      maxAllowedRegressions: 1
+    }
+  };
+  const gatePass = PolicyLoader.evaluatePolicyGate([criticalReqDiff], gatePolicy);
+  assert.equal(gatePass.pass, true, '1 breach with maxAllowedRegressions=1 must pass');
+  const gateFail = PolicyLoader.evaluatePolicyGate([criticalReqDiff, criticalReqDiff], gatePolicy);
+  assert.equal(gateFail.pass, false, '2 breaches with maxAllowedRegressions=1 must fail');
+  console.log('   ✅ Policy Matrix: Strict, Balanced, Startup, Invariant Overrides, and maxAllowedRegressions verified.');
+
+  // -------------------------------------------------------------
+  // Test 6: Semantic SEO Diff & Risk Assessment (P1)
+  // -------------------------------------------------------------
+  console.log('\n6️⃣ Testing Semantic SEO Git Diff Engine...');
   const nextAppPath = path.join(FIXTURES_DIR, 'nextjs-app');
   const semChange = analyzeSemanticFileChange('app/page.tsx', nextAppPath);
   assert.equal(semChange.affectsMetadata, true);
@@ -131,9 +207,9 @@ regression:
   console.log(`   ✅ Semantic Analysis for app/page.tsx: Risk=${semChange.riskLevel}`);
 
   // -------------------------------------------------------------
-  // Test 6: Developer-Native PR Comment Formatter (P1)
+  // Test 7: Developer-Native PR Comment Formatter (P1)
   // -------------------------------------------------------------
-  console.log('\n6️⃣ Testing Developer-Native GitHub PR Comment Formatter...');
+  console.log('\n7️⃣ Testing Developer-Native GitHub PR Comment Formatter...');
   const snapResult = await createSnapshotTool(nextAppPath);
   const regCheck = await checkRegression(nextAppPath, snapResult.snapshot);
   assert.equal(regCheck.pass, true);
@@ -143,26 +219,28 @@ regression:
   console.log(`   ✅ PR Markdown Generated (${prComment.length} characters)`);
 
   // -------------------------------------------------------------
-  // Test 7: 17 Framework Adapters Coverage
+  // Test 8: 17 Framework Adapters + Unknown Adapter Coverage
   // -------------------------------------------------------------
-  console.log('\n7️⃣ Testing 17 Framework Adapters Coverage...');
+  console.log('\n8️⃣ Testing Framework Adapters & Unknown Fallback...');
   const adapters = defaultAdapterRegistry.getAllAdapters();
-  assert.equal(adapters.length, 17, 'Must have exactly 17 adapters loaded');
-  console.log(`   ✅ ${adapters.length} Framework Adapters Loaded.`);
+  assert.equal(adapters.length, 17, 'Must have exactly 17 standard adapters loaded');
+  const emptyFolderAdapter = defaultAdapterRegistry.getAdapterForProject('non_existent_folder_abc');
+  assert.equal(emptyFolderAdapter.id, 'unknown');
+  console.log(`   ✅ 17 Adapters Loaded + UnknownAdapter fallback verified.`);
 
   // -------------------------------------------------------------
-  // Test 8: SARIF v2.1.0 Exporter
+  // Test 9: SARIF v2.1.0 Exporter
   // -------------------------------------------------------------
-  console.log('\n8️⃣ Testing SARIF v2.1.0 Exporter for GitHub Security Tab...');
+  console.log('\n9️⃣ Testing SARIF v2.1.0 Exporter for GitHub Security Tab...');
   const sarif = exportFindingsToSarif(snapResult.snapshot.findings, nextAppPath);
   assert.equal(sarif.version, '2.1.0');
   assert.equal(sarif.runs[0].tool.driver.name, 'SEO Gravity');
   console.log(`   ✅ SARIF Report Generated: Driver=${sarif.runs[0].tool.driver.name}, Version=${sarif.version}`);
 
   // -------------------------------------------------------------
-  // Test 9: Content-Hash Cache Manager with Provenance & LRU
+  // Test 10: Content-Hash Cache Manager with Provenance & LRU
   // -------------------------------------------------------------
-  console.log('\n9️⃣ Testing Cache Manager with Provenance & LRU...');
+  console.log('\n🔟 Testing Cache Manager with Provenance & LRU...');
   const cacheKey = defaultCacheManager.computeKey('test_ast', { file: 'page.tsx' });
   defaultCacheManager.set(cacheKey, { parsed: true }, 10000, 'typescript_ast');
   const cachedVal = defaultCacheManager.getWithMetadata<any>(cacheKey);

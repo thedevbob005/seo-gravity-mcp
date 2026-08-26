@@ -26,7 +26,10 @@ export interface InvariantEvaluationContext {
   url: string;
   logicalPageId: string;
   sourceFilePath?: string;
+  sourceRange?: { startLine: number; endLine: number };
   statusCode?: number;
+  hasTitle?: boolean;
+  hasDescription?: boolean;
   hasMetadata?: boolean;
   hasCanonical?: boolean;
   isIndexable?: boolean;

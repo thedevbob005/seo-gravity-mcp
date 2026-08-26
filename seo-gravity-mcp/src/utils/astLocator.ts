@@ -8,6 +8,8 @@ export interface ASTMetadataInspection {
   hasGenerateMetadata: boolean;
   hasCanonicalDeclaration: boolean;
   hasSchemaMarkup: boolean;
+  detectionMethod: 'ast_exact' | 'regex_heuristic';
+  confidence: number;
   metadataRange?: ASTSourceRange;
   canonicalRange?: ASTSourceRange;
   schemaRange?: ASTSourceRange;
@@ -22,7 +24,9 @@ export function inspectSourceFileAST(filePath: string): ASTMetadataInspection {
       hasMetadataExport: false,
       hasGenerateMetadata: false,
       hasCanonicalDeclaration: false,
-      hasSchemaMarkup: false
+      hasSchemaMarkup: false,
+      detectionMethod: 'ast_exact',
+      confidence: 1.0
     };
   }
 
@@ -140,18 +144,24 @@ export function inspectSourceFileAST(filePath: string): ASTMetadataInspection {
 
   visit(sourceFile);
 
+  let regexFallbackUsed = false;
+
   // Strict fallback regex detection if AST missed non-standard export structures
   if (!hasMetadataExport && /export\s+const\s+metadata\b/i.test(content)) {
     hasMetadataExport = true;
+    regexFallbackUsed = true;
   }
   if (!hasGenerateMetadata && /export\s+(async\s+)?function\s+generateMetadata\b/i.test(content)) {
     hasGenerateMetadata = true;
+    regexFallbackUsed = true;
   }
   if (!hasCanonicalDeclaration && (/(rel=["']canonical["']|alternates:\s*\{[^}]*canonical:)/i.test(content))) {
     hasCanonicalDeclaration = true;
+    regexFallbackUsed = true;
   }
   if (!hasSchemaMarkup && /application\/ld\+json/i.test(content)) {
     hasSchemaMarkup = true;
+    regexFallbackUsed = true;
   }
 
   return {
@@ -159,6 +169,8 @@ export function inspectSourceFileAST(filePath: string): ASTMetadataInspection {
     hasGenerateMetadata,
     hasCanonicalDeclaration,
     hasSchemaMarkup,
+    detectionMethod: regexFallbackUsed ? 'regex_heuristic' : 'ast_exact',
+    confidence: regexFallbackUsed ? 0.85 : 1.0,
     metadataRange,
     canonicalRange,
     schemaRange,

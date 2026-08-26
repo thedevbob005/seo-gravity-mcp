@@ -285,6 +285,8 @@ export interface ContentBrief {
 
 export interface JsRenderingDiffReport {
   url: string;
+  executionMode: 'static_dom_normalization';
+  domParser: string;
   serverHtmlLength: number;
   hydratedDomLength: number;
   contentDifferencePercent: number;

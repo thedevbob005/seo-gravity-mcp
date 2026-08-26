@@ -77,6 +77,8 @@ export async function compareServerVsClientDom(url: string): Promise<JsRendering
 
   return {
     url,
+    executionMode: 'static_dom_normalization',
+    domParser: 'jsdom_html_parser',
     serverHtmlLength: serverLength,
     hydratedDomLength: clientLength,
     contentDifferencePercent: percentDiff,

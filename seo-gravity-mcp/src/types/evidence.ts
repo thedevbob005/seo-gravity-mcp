@@ -20,8 +20,8 @@ export interface AstEvidence extends BaseEvidence {
   sourceFile: string;
   symbolName?: string;
   nodeType?: string;
-  startLine: number;
-  endLine: number;
+  startLine?: number;
+  endLine?: number;
   startColumn?: number;
   endColumn?: number;
   codeSnippet?: string;

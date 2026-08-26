@@ -56,8 +56,8 @@ export const BUILTIN_INVARIANTS: InvariantDefinition[] = [
           type: 'ast',
           description: has ? 'Canonical declaration found in AST' : 'Canonical missing from source AST',
           sourceFile: ctx.sourceFilePath,
-          startLine: 1,
-          endLine: 1,
+          startLine: ctx.sourceRange?.startLine,
+          endLine: ctx.sourceRange?.endLine,
           timestamp: new Date().toISOString()
         } : undefined
       };
@@ -76,7 +76,7 @@ export const BUILTIN_INVARIANTS: InvariantDefinition[] = [
     remediationGuide: 'Export title in page metadata, define @section/block title, or add <title> in component head.',
     verificationMethod: 'Inspect page <title> in AST, template, or rendered DOM.',
     evaluate(ctx: InvariantEvaluationContext): InvariantEvaluationResult {
-      const has = Boolean(ctx.hasMetadata || ctx.extractedTitle);
+      const has = ctx.hasTitle !== undefined ? ctx.hasTitle : Boolean(ctx.extractedTitle || ctx.hasMetadata);
       return {
         satisfied: has,
         observedCondition: has ? `Title present ("${ctx.extractedTitle || 'Declared'}")` : 'Title missing',
@@ -85,8 +85,8 @@ export const BUILTIN_INVARIANTS: InvariantDefinition[] = [
           type: 'ast',
           description: has ? `Title metadata: "${ctx.extractedTitle || 'Declared'}"` : 'Title metadata missing',
           sourceFile: ctx.sourceFilePath,
-          startLine: 1,
-          endLine: 1,
+          startLine: ctx.sourceRange?.startLine,
+          endLine: ctx.sourceRange?.endLine,
           timestamp: new Date().toISOString()
         } : undefined
       };

@@ -16,8 +16,10 @@ import { PhpClassicAdapter } from './phpClassicAdapter.js';
 import { SsgAdapter } from './ssgAdapter.js';
 import { ViteReactAdapter } from './viteReactAdapter.js';
 import { StaticAdapter } from './staticAdapter.js';
+import { UnknownAdapter } from './unknownAdapter.js';
 
 export class AdapterRegistry {
+  private unknownAdapter = new UnknownAdapter();
   private adapters: FrameworkAdapter[] = [
     // Specialized JS/TS Frameworks
     new NextAppAdapter(),
@@ -41,7 +43,7 @@ export class AdapterRegistry {
     new SsgAdapter(),
     new ViteReactAdapter(),
 
-    // Universal Fallback
+    // Static HTML Sites
     new StaticAdapter()
   ];
 
@@ -51,10 +53,11 @@ export class AdapterRegistry {
         return adapter;
       }
     }
-    return this.adapters[this.adapters.length - 1]; // fallback static
+    return this.unknownAdapter;
   }
 
   public getAdapterById(id: string): FrameworkAdapter | undefined {
+    if (id === 'unknown') return this.unknownAdapter;
     return this.adapters.find(a => a.id === id);
   }
 

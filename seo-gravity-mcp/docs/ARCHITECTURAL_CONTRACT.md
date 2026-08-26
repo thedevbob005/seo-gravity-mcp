@@ -1,6 +1,6 @@
-# 📜 SEO Gravity: Architectural Contract & System Specification
+# 🏛️ SEO Gravity Architectural Contract & Invariants Specification (v1.3.3)
 
-> **Version**: 1.3.2 | **Author**: `thedevbob005` | **Repository**: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp)
+> **Version**: 1.3.3 | **Author**: `thedevbob005` | **Repository**: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp)
 
 This document establishes the **formal engineering guarantees, layer boundary constraints, evidence semantics, invariant contracts, and benchmark methodology** governing the SEO Gravity architecture.
 

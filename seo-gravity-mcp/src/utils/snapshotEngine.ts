@@ -22,6 +22,8 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import * as crypto from 'crypto';
 
+import { computeNormalizedLogicalPageId, normalizeUrl } from './urlNormalizer.js';
+
 export interface CreateSnapshotOptions {
   baseUrl?: string;
   maxCrawlDepth?: number;
@@ -29,18 +31,8 @@ export interface CreateSnapshotOptions {
   includeCrawlGraph?: boolean;
 }
 
-export function computeLogicalPageId(urlOrPath: string): string {
-  let clean = urlOrPath;
-  let origin = 'default';
-  try {
-    if (clean.startsWith('http')) {
-      const u = new URL(clean);
-      origin = u.origin.toLowerCase();
-      clean = u.pathname;
-    }
-  } catch {}
-  clean = clean.replace(/\/$/, '') || '/';
-  return 'page_' + crypto.createHash('sha256').update(`${origin}:${clean}`).digest('hex').substring(0, 12);
+export function computeLogicalPageId(urlOrPath: string, baseUrl?: string): string {
+  return computeNormalizedLogicalPageId(urlOrPath, baseUrl);
 }
 
 export function extractGitMetadata(projectDir: string): GitMetadata {
@@ -224,15 +216,21 @@ export async function createProjectSnapshot(
       const fullSrcPath = path.join(resolvedPath, route.sourceFilePath);
       const ast = inspectSourceFileAST(fullSrcPath);
 
-      // Metadata invariant
+      // Metadata & Title invariant (disaggregated)
       const hasMeta = ast.hasMetadataExport || ast.hasGenerateMetadata || route.hasHeadComponent;
+      const hasTitle = Boolean(ast.extractedTitle || route.hasHeadComponent);
+
       const titleInv = defaultInvariantRegistry.evaluateContext(
         'INV-TITLE-PRESENT',
         {
           url: route.routePath,
           logicalPageId: pageId,
+          sourceFilePath: route.sourceFilePath,
+          sourceRange: ast.metadataRange,
+          hasTitle,
           hasMetadata: hasMeta,
-          extractedTitle: ast.extractedTitle
+          extractedTitle: ast.extractedTitle,
+          hasDescription: Boolean(ast.extractedDescription)
         },
         {
           analyzer: 'astLocator',
@@ -250,6 +248,8 @@ export async function createProjectSnapshot(
         {
           url: route.routePath,
           logicalPageId: pageId,
+          sourceFilePath: route.sourceFilePath,
+          sourceRange: ast.canonicalRange,
           hasCanonical,
           extractedCanonical: ast.extractedCanonical
         },
@@ -274,11 +274,9 @@ export async function createProjectSnapshot(
             evidenceType: 'observed',
             evidence: `File '${route.sourceFilePath}' has no metadata declaration.`,
             affectedUrl: route.routePath,
-            sourceLocation: {
-              filePath: route.sourceFilePath,
-              startLine: 1,
-              endLine: 1
-            },
+            sourceLocation: ast.metadataRange
+              ? { filePath: route.sourceFilePath, startLine: ast.metadataRange.startLine, endLine: ast.metadataRange.endLine }
+              : { filePath: route.sourceFilePath },
             sourceRange: ast.metadataRange,
             likelyRootCause: 'Page component does not declare SEO metadata export.',
             recommendation: `Add metadata export or title tag in ${route.sourceFilePath}.`,
@@ -304,7 +302,9 @@ export async function createProjectSnapshot(
             evidenceType: 'observed',
             evidence: `Route '${route.routePath}' (${route.sourceFilePath}) does not declare a canonical URL.`,
             affectedUrl: route.routePath,
-            sourceLocation: { filePath: route.sourceFilePath },
+            sourceLocation: ast.canonicalRange
+              ? { filePath: route.sourceFilePath, startLine: ast.canonicalRange.startLine, endLine: ast.canonicalRange.endLine }
+              : { filePath: route.sourceFilePath },
             sourceRange: ast.canonicalRange,
             likelyRootCause: 'Page does not declare its canonical master URL, risking duplicate indexing.',
             recommendation: `Add canonical URL declaration to ${route.sourceFilePath}.`,
@@ -353,7 +353,15 @@ export async function createProjectSnapshot(
           );
         }
       }
-    } catch {}
+    } catch (err: any) {
+      crawlGraphSummary = {
+        state: 'FAILED',
+        error: err.message || 'Crawl error',
+        baseUrl,
+        pagesCrawled: 0,
+        orphanPages: []
+      };
+    }
   }
 
   // 4. Compute Multidimensional Scores
@@ -475,19 +483,38 @@ export function compareSnapshots(
       });
     } else if (bInv && !cInv) {
       // Invariant disappeared in current snapshot!
-      status = bInv.satisfied ? 'NEW_REGRESSION' : 'RESOLVED';
-      invariantDiffs.push({
-        invariantId: bInv.id,
-        logicalPageId: bInv.logicalPageId,
-        url: bInv.url,
-        status,
-        baselineSatisfied: bInv.satisfied,
-        currentSatisfied: false,
-        requirementLevel: bInv.requirementLevel || 'REQUIRED',
-        severity: bInv.severity || 'high',
-        evidence: bInv.evidence,
-        message: `${bInv.description}: Invariant disappeared (${status})`
-      });
+      const currentRouteStillExists = (current.discoveredRoutes || []).some(r => r.routePath === bInv.url);
+      if (currentRouteStillExists) {
+        // Active route lost its invariant evidence -> Genuine regression
+        status = bInv.satisfied ? 'NEW_REGRESSION' : 'RESOLVED';
+        invariantDiffs.push({
+          invariantId: bInv.id,
+          logicalPageId: bInv.logicalPageId,
+          url: bInv.url,
+          status,
+          baselineSatisfied: bInv.satisfied,
+          currentSatisfied: false,
+          requirementLevel: bInv.requirementLevel || 'REQUIRED',
+          severity: bInv.severity || 'high',
+          evidence: bInv.evidence,
+          message: `${bInv.description}: Missing invariant evidence for active route (${status})`
+        });
+      } else {
+        // Route was intentionally deleted or removed -> Expected change
+        status = 'EXPECTED_CHANGE';
+        invariantDiffs.push({
+          invariantId: bInv.id,
+          logicalPageId: bInv.logicalPageId,
+          url: bInv.url,
+          status,
+          baselineSatisfied: bInv.satisfied,
+          currentSatisfied: false,
+          requirementLevel: bInv.requirementLevel || 'REQUIRED',
+          severity: 'low',
+          evidence: bInv.evidence,
+          message: `${bInv.description}: Route was removed (EXPECTED_CHANGE)`
+        });
+      }
     }
   }
 

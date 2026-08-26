@@ -1,4 +1,4 @@
-# 🚀 SEO Gravity (v1.3.2)
+# 🚀 SEO Gravity (v1.3.3)
 
 <div align="center">
 
