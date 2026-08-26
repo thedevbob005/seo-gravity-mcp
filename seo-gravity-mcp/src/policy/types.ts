@@ -1,11 +1,13 @@
 import { RequirementLevel, InvariantSeverity } from '../types/canonical.js';
 
-export type PolicyProfileName =
+export type BuiltinProfileName =
   | 'strict'
   | 'balanced'
   | 'startup'
   | 'ecommerce'
   | 'documentation';
+
+export type PolicyProfileName = BuiltinProfileName | 'custom';
 
 export interface InvariantPolicyOverride {
   requirementLevel?: RequirementLevel;

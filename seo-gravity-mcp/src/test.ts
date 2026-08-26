@@ -79,7 +79,7 @@ regression:
   allow_expected_changes: false
   max_allowed_regressions: 2
 `;
-  const parsedYaml = PolicyLoader.parseYaml(mockYaml);
+  const parsedYaml: any = PolicyLoader.parseYaml(mockYaml);
   assert.equal(parsedYaml.version, 1);
   assert.equal(parsedYaml.profile, 'strict');
   assert.equal(parsedYaml.policy.canonical, 'required');

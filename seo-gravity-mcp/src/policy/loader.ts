@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as YAML from 'yaml';
 import { z } from 'zod';
-import { PolicyConfig, PolicyProfileName, InvariantPolicyOverride } from './types.js';
+import { PolicyConfig, PolicyProfileName, BuiltinProfileName, InvariantPolicyOverride } from './types.js';
 import { BUILTIN_PROFILES } from './profiles.js';
 import { InvariantDiffItem, RequirementLevel } from '../types/canonical.js';
 
@@ -67,12 +67,10 @@ export class PolicyLoader {
     }
 
     const config = parsed.data;
-    const baseProfileName: PolicyProfileName = config.profile || 'balanced';
-    const baseProfile = BUILTIN_PROFILES[baseProfileName];
-
-    if (!baseProfile) {
-      throw new Error(`Unknown SEO Gravity policy profile: '${baseProfileName}'.`);
-    }
+    const baseProfileName = config.profile || 'balanced';
+    const baseProfile = (baseProfileName !== 'custom' && BUILTIN_PROFILES[baseProfileName as BuiltinProfileName])
+      ? BUILTIN_PROFILES[baseProfileName as BuiltinProfileName]
+      : BUILTIN_PROFILES.balanced;
 
     const rawReg = config.regression || {};
     const normalizedRegression = {
@@ -116,7 +114,7 @@ export class PolicyLoader {
     }
 
     return {
-      version: config.version || baseProfile.version,
+      version: typeof config.version === 'number' ? config.version : (Number(config.version) || baseProfile.version),
       profile: baseProfileName,
       regression: normalizedRegression,
       invariants: mergedInvariants,

@@ -1,6 +1,6 @@
-import { PolicyConfig, PolicyProfileName } from './types.js';
+import { PolicyConfig, BuiltinProfileName } from './types.js';
 
-export const BUILTIN_PROFILES: Record<PolicyProfileName, PolicyConfig> = {
+export const BUILTIN_PROFILES: Record<BuiltinProfileName, PolicyConfig> = {
   // 1. Strict: Fails on any regression, including RECOMMENDED invariants
   strict: {
     version: 1,

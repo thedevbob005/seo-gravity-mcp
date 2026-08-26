@@ -39,8 +39,8 @@ export interface TemplateEvidence extends BaseEvidence {
 
 export interface RouteConfigEvidence extends BaseEvidence {
   type: 'route_config';
-  sourceFile: string;
-  configFormat: 'laravel_routes' | 'symfony_yaml' | 'next_app_dir' | 'next_pages_dir' | 'react_router' | 'static_file';
+  sourceFile?: string;
+  configFormat: 'laravel_routes' | 'symfony_yaml' | 'next_app_dir' | 'next_pages_dir' | 'react_router' | 'static_file' | 'implicit_default';
   declaredPattern: string;
 }
 
