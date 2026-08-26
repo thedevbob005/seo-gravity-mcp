@@ -123,26 +123,36 @@ export const BUILTIN_INVARIANTS: InvariantDefinition[] = [
   {
     id: 'INV-ROBOTS-ALLOWED',
     name: 'Robots Policy Determinable',
-    description: 'Project must provide a determinable robots crawl policy via robots.txt, robots.ts, or standard allow-all defaults.',
+    description: 'The effective robots crawl policy must be determinable; absence of robots.txt defaults to allow-all unless another blocking mechanism is observed.',
     category: 'robots',
     requirementLevel: 'CONDITIONAL',
     severity: 'medium',
     scope: 'SITE',
     expectedCondition: 'Robots crawl policy is determinable and does not block critical assets',
-    failureEvidence: 'No robots crawl configuration detected.',
-    remediationGuide: 'Create public/robots.txt or app/robots.ts if specific bot directives are desired.',
-    verificationMethod: 'Check GET /robots.txt response or adapter robots inspection.',
+    failureEvidence: 'Robots policy could not be determined or an observed policy blocks required resources.',
+    remediationGuide: 'Create or correct robots.txt/app/robots.ts when explicit crawler directives are needed.',
+    verificationMethod: 'Check GET /robots.txt and relevant meta/X-Robots directives.',
     evaluate(ctx: InvariantEvaluationContext): InvariantEvaluationResult {
-      const ok = Boolean(ctx.hasRobots);
+      const policy = ctx.robotsPolicyState ?? (ctx.hasRobots ? 'explicit' : 'default_allow');
+      const ok = policy === 'explicit' || policy === 'default_allow';
+      const observed = policy === 'explicit'
+        ? 'Explicit robots policy resolved.'
+        : policy === 'default_allow'
+          ? 'No explicit robots file; standard default allow policy assumed.'
+          : policy === 'blocking'
+            ? 'Blocking robots policy observed.'
+            : 'Robots policy could not be determined.';
       return {
         satisfied: ok,
-        observedCondition: ok ? 'Robots policy determinable' : 'Robots policy not explicitly declared',
-        evidence: ok ? 'robots.txt configuration present.' : 'No robots.txt found (default allow-all).',
+        observedCondition: observed,
+        evidence: ok
+          ? 'Effective robots policy is determinable.'
+          : 'Effective robots policy is not safely determinable or is blocking.',
         polymorphicEvidence: {
           type: 'route_config',
-          description: ok ? 'Robots config resolved' : 'Robots config absent',
-          sourceFile: 'robots.txt',
-          configFormat: 'static_file',
+          description: observed,
+          sourceFile: ctx.hasRobots ? 'robots.txt' : undefined,
+          configFormat: ctx.hasRobots ? 'static_file' : 'implicit_default',
           declaredPattern: '/robots.txt',
           timestamp: new Date().toISOString()
         }
@@ -213,9 +223,7 @@ export class InvariantRegistry {
   private invariants = new Map<string, InvariantDefinition>();
 
   constructor(initial: InvariantDefinition[] = BUILTIN_INVARIANTS) {
-    for (const inv of initial) {
-      this.invariants.set(inv.id, inv);
-    }
+    for (const inv of initial) this.invariants.set(inv.id, inv);
   }
 
   public register(invariant: InvariantDefinition): void {
