@@ -30,13 +30,13 @@ const __dirname = path.dirname(__filename);
 const FIXTURES_DIR = path.resolve(__dirname, '../test/fixtures');
 
 async function runTests() {
-  console.log('🧪 Starting SEO Gravity MCP v1.3.0 (Depth, Policy & Code Review) Test Suite...\n');
+  console.log('🧪 Starting SEO Gravity MCP v1.3.1 (Depth, Policy & Code Review) Test Suite...\n');
 
   // -------------------------------------------------------------
   // Test 1: Modular Server & 35 Tool Catalog
   // -------------------------------------------------------------
   console.log('1️⃣ Testing Modular Server Architecture...');
-  const server = createMcpServer({ name: 'seo-gravity-mcp', version: '1.3.0' });
+  const server = createMcpServer({ name: 'seo-gravity-mcp', version: '1.3.1' });
   console.log(`   ✅ Server Initialized: ${TOOLS.length} tools registered across all architectural layers.`);
 
   // -------------------------------------------------------------
@@ -110,7 +110,7 @@ async function runTests() {
   const cachedVal = defaultCacheManager.getWithMetadata<any>(cacheKey);
   console.log(`   ✅ Cache Provenance: Provider=${cachedVal?.metadata.provider}, Age=${cachedVal?.metadata.ageMs}ms`);
 
-  console.log('\n🎉 ALL v1.3.0 DEPTH, POLICY & CODE REVIEW SUITES PASSED CLEANLY!\n');
+  console.log('\n🎉 ALL v1.3.1 DEPTH, POLICY & CODE REVIEW SUITES PASSED CLEANLY!\n');
 }
 
 runTests().catch(err => {

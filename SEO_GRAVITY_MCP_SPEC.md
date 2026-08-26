@@ -1,7 +1,7 @@
-# 🚀 SEO Gravity: Full System Technical Specification & Architectural Blueprint (v1.3.0)
+# 🚀 SEO Gravity: Full System Technical Specification & Architectural Blueprint (v1.3.1)
 
 > **The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.**
-> Author: **thedevbob005** | Repository: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp) | Version: **1.3.0**
+> Author: **thedevbob005** | Repository: [`thedevbob005/seo-gravity-mcp`](https://github.com/thedevbob005/seo-gravity-mcp) | Version: **1.3.1**
 
 ---
 
