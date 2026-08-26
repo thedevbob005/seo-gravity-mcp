@@ -21,6 +21,33 @@ async function runCli() {
   const args = process.argv.slice(2);
   const command = args[0] || 'audit';
 
+  if (args.includes('--version') || args.includes('-v') || command === 'version') {
+    console.log(`seo-gravity v${VERSION}`);
+    process.exit(EXIT_CODES.PASS);
+  }
+
+  if (args.includes('--help') || args.includes('-h') || command === 'help') {
+    console.log(`\n🚀 SEO Gravity CLI (v${VERSION}) — SEO Engineering Infrastructure for AI Agents & CI/CD\n`);
+    console.log(`Usage: seo-gravity <command> [options]\n`);
+    console.log(`Commands:`);
+    console.log(`  audit     Audit a project repository or live site`);
+    console.log(`  snapshot  Create an invariant baseline snapshot of the project`);
+    console.log(`  check     Evaluate project invariants against baseline snapshot for regressions`);
+    console.log(`  diff      Analyze git changes for semantic SEO regression risks`);
+    console.log(`  review    Generate GitHub PR comment markdown\n`);
+    console.log(`Options:`);
+    console.log(`  -p, --project <dir>    Project root directory (default: '.')`);
+    console.log(`  -u, --base-url <url>   Base URL for live crawling`);
+    console.log(`  -b, --baseline <path>  Path to baseline snapshot JSON`);
+    console.log(`  -f, --format <format>  Output format: pretty, json, sarif (default: pretty)`);
+    console.log(`  -o, --output <path>    Output file path`);
+    console.log(`  --policy <path>        Path to custom .seo-gravity.yml policy`);
+    console.log(`  --base-ref <ref>       Base Git reference for diffing (default: 'HEAD~1')`);
+    console.log(`  -v, --version          Print version`);
+    console.log(`  -h, --help             Show help\n`);
+    process.exit(EXIT_CODES.PASS);
+  }
+
   const getArg = (flag: string, alias?: string): string | undefined => {
     let idx = args.indexOf(flag);
     if (idx === -1 && alias) idx = args.indexOf(alias);

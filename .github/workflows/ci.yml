@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    defaults:
+      run:
+        working-directory: ./seo-gravity-mcp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Run Strict Unit & Policy Assertion Test Suite
+        run: npm run test
+
+      - name: Run Correlation, Invariant & False-Positive Benchmarks
+        run: npm run test:benchmark
+
+  package-check:
+    name: Package Validation & CLI Sanity
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    defaults:
+      run:
+        working-directory: ./seo-gravity-mcp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install & Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Verify CLI Executable
+        run: |
+          node dist/cli.js --version
+          node dist/cli.js --help
+
+      - name: Verify npm package dry run
+        run: npm pack --dry-run

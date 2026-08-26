@@ -3,6 +3,7 @@
 <div align="center">
 
 [![npm version](https://img.shields.io/npm/v/seo-gravity-mcp?style=for-the-badge&logo=npm&color=CB3837)](https://www.npmjs.com/package/seo-gravity-mcp)
+[![CI](https://github.com/thedevbob005/seo-gravity-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/thedevbob005/seo-gravity-mcp/actions/workflows/ci.yml)
 [![npm downloads](https://img.shields.io/npm/dm/seo-gravity-mcp?style=for-the-badge&logo=npm&color=CB3837)](https://www.npmjs.com/package/seo-gravity-mcp)
 ![MCP Protocol](https://img.shields.io/badge/MCP-Protocol-blue?style=for-the-badge&logo=anthropic)
 ![SARIF Ready](https://img.shields.io/badge/SARIF-GitHub_Code_Scanning-success?style=for-the-badge)
