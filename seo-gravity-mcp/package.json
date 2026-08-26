@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "seo-gravity-mcp": "./dist/index.js",
-    "seo-gravity": "./dist/cli.js"
+    "seo-gravity-mcp": "dist/index.js",
+    "seo-gravity": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
