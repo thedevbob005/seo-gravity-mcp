@@ -22,6 +22,8 @@ export type InvariantCategory =
   | 'robots'
   | 'ai_readiness';
 
+export type RobotsPolicyState = 'explicit' | 'default_allow' | 'blocking' | 'unknown';
+
 export interface InvariantEvaluationContext {
   url: string;
   logicalPageId: string;
@@ -35,12 +37,13 @@ export interface InvariantEvaluationContext {
   isIndexable?: boolean;
   hasSchema?: boolean;
   hasRobots?: boolean;
+  robotsPolicyState?: RobotsPolicyState;
   hasSitemap?: boolean;
   hasLlmsTxt?: boolean;
   incomingLinksCount?: number;
   extractedTitle?: string;
   extractedCanonical?: string;
-  rawPayload?: any;
+  rawPayload?: unknown;
 }
 
 export interface InvariantEvaluationResult {
@@ -51,7 +54,7 @@ export interface InvariantEvaluationResult {
 }
 
 export interface InvariantDefinition {
-  id: string; // e.g. "INV-HTTP-200"
+  id: string;
   name: string;
   description: string;
   category: InvariantCategory;
