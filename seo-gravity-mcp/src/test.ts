@@ -1,3 +1,4 @@
+import './utils/polyfill.js';
 import assert from 'node:assert/strict';
 import * as path from 'path';
 import { fileURLToPath } from 'url';

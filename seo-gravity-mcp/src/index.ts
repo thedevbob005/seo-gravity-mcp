@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import './utils/polyfill.js';
 import { startStdioServer } from './server/server.js';
 import { VERSION, PACKAGE_NAME } from './version.js';
 

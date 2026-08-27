@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import './utils/polyfill.js';
 import * as path from 'path';
 import * as fs from 'fs';
 import { auditProject, checkRegression, createSnapshotTool } from './tools/orchestration.js';

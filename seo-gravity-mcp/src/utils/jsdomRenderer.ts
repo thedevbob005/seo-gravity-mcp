@@ -1,3 +1,4 @@
+import './polyfill.js';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import axios from 'axios';
 import { getRandomUserAgent } from './scraper.js';
