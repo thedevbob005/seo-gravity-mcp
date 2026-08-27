@@ -72,7 +72,7 @@ export function formatPrCommentMarkdown(
   }
 
   md += `---\n`;
-  md += `*Generated automatically by [SEO Gravity MCP](https://github.com/thedevbob005/seo-gravity-mcp) • The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.*`;
+  md += `*Generated automatically by [SEO Gravity MCP](https://github.com/thedevnaamnei/seo-gravity-mcp) • The SEO Engineering Infrastructure Layer for AI Coding Agents & CI/CD Pipelines.*`;
 
   return md;
 }

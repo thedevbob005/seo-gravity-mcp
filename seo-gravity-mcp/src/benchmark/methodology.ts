@@ -1,3 +1,5 @@
+import { VERSION } from '../version.js';
+
 export interface BenchmarkFixtureCase {
   frameworkId: string;
   category: 'JS/TS SSR' | 'JS/TS SSG' | 'PHP / CMS' | 'PHP Fullstack' | 'Markdown SSG' | 'React SPA' | 'Static HTML';
@@ -207,7 +209,7 @@ export function generateBenchmarkMethodologyReport(): BenchmarkMethodologyReport
 
   return {
     title: 'SEO Gravity Multi-Framework Correlation & Invariant Benchmark Methodology',
-    version: '1.3.4',
+    version: VERSION,
     evaluatedAt: new Date().toISOString(),
     definitionOfCorrelation: 'A correlation is defined as a verified mapping connecting an observed URL or Route Pattern to its exact physical source file, template, route configuration, and AST symbol coordinate range.',
     totalFrameworksTested: BENCHMARK_FIXTURES.length,

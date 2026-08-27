@@ -139,7 +139,7 @@ export function exportFindingsToSarif(
           driver: {
             name: 'SEO Gravity',
             version: toolVersion,
-            informationUri: 'https://github.com/thedevbob005/seo-gravity-mcp',
+            informationUri: 'https://github.com/thedevnaamnei/seo-gravity-mcp',
             rules: Array.from(ruleMap.values())
           }
         },
