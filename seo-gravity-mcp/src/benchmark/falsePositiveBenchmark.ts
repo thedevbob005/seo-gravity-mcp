@@ -1,3 +1,4 @@
+import '../utils/polyfill.js';
 import { defaultInvariantRegistry } from '../invariants/registry.js';
 import { InvariantEvaluationContext } from '../invariants/types.js';
 

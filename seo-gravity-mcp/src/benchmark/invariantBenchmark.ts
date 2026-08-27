@@ -1,3 +1,4 @@
+import '../utils/polyfill.js';
 import { defaultInvariantRegistry } from '../invariants/registry.js';
 import { createProjectSnapshot, compareSnapshots } from '../utils/snapshotEngine.js';
 import { BUILTIN_PROFILES } from '../policy/profiles.js';

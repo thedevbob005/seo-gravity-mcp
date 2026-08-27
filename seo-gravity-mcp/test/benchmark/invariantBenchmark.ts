@@ -1,3 +1,4 @@
+import '../../src/utils/polyfill.js';
 import { defaultInvariantRegistry } from '../../src/invariants/registry.js';
 import { createProjectSnapshot, compareSnapshots } from '../../src/utils/snapshotEngine.js';
 import * as path from 'path';

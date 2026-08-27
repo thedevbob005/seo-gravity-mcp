@@ -1,3 +1,4 @@
+import '../../src/utils/polyfill.js';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { defaultAdapterRegistry } from '../../src/adapters/adapterRegistry.js';
